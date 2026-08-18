@@ -7,7 +7,9 @@ import { UsersService } from "../users/users.service";
 import {
   ShareResource,
   ShareSummary,
+  SharedWithMeItem,
   toShareSummary,
+  toSharedWithMeItem,
 } from "./share.mapper";
 
 type CreateUserShareParams = {
@@ -106,6 +108,21 @@ export class SharesService {
     return shares.map(toShareSummary);
   }
 
+  async listSharedWithMe(userId: string): Promise<SharedWithMeItem[]> {
+    const shares = await this.prisma.share.findMany({
+      where: {
+        recipientUserId: userId,
+        role: ShareRole.VIEWER,
+        revokedAt: null,
+        type: ShareType.USER,
+      },
+      orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+      select: this.sharedWithMeSelect(),
+    });
+
+    return shares.map(toSharedWithMeItem);
+  }
+
   private async assertOwnsResource(
     userId: string,
     resource: ShareResource,
@@ -188,6 +205,43 @@ export class SharesService {
       folderId: true,
       fileId: true,
       recipientUser: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+        },
+      },
+      createdAt: true,
+    } as const;
+  }
+
+  private sharedWithMeSelect() {
+    return {
+      id: true,
+      type: true,
+      role: true,
+      dataRoom: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      folder: {
+        select: {
+          id: true,
+          name: true,
+          dataRoomId: true,
+        },
+      },
+      file: {
+        select: {
+          id: true,
+          name: true,
+          dataRoomId: true,
+          folderId: true,
+        },
+      },
+      createdBy: {
         select: {
           id: true,
           email: true,
