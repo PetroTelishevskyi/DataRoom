@@ -6,7 +6,8 @@ import {
   dataRoomContentsQueryOptions,
   dataRoomsQueryOptions,
 } from "@/features/data-rooms/data-room-queries";
-import { createRootFolder } from "@/features/folders/folder-api";
+import { createRootFolder, renameFolder } from "@/features/folders/folder-api";
+import type { FolderResourceItem } from "@/features/data-rooms/data-room.types";
 import { toast } from "@/components/ui/toast/use-toast";
 
 export function HomePage() {
@@ -45,12 +46,39 @@ export function HomePage() {
     },
     [createFolder],
   );
+  const renameFolderMutation = useMutation({
+    mutationFn: (params: { folderId: string; name: string }) =>
+      renameFolder(params),
+    onSuccess: async () => {
+      if (dataRoom) {
+        await queryClient.invalidateQueries({
+          queryKey: dataRoomQueryKeys.roomContents(dataRoom.id),
+        });
+      }
+
+      toast({
+        title: "Folder renamed",
+        variant: "success",
+      });
+    },
+  });
+  const { mutateAsync: renameFolderMutationAsync } = renameFolderMutation;
+  const handleRenameFolder = useCallback(
+    async (folder: FolderResourceItem, name: string) => {
+      await renameFolderMutationAsync({ folderId: folder.id, name });
+    },
+    [renameFolderMutationAsync],
+  );
 
   return (
     <ResourceBrowser
       accessRole={contentsQuery.data?.access.role ?? "OWNER"}
       breadcrumbs={contentsQuery.data?.breadcrumbs ?? []}
-      capabilities={{ canCreateFolder: true, canUpload: true }}
+      capabilities={{
+        canCreateFolder: true,
+        canRenameFolder: true,
+        canUpload: true,
+      }}
       getBreadcrumbHref={(breadcrumb) => `/folders/${breadcrumb.id}`}
       getFolderHref={(folder) => `/folders/${folder.id}`}
       hasResource={Boolean(dataRoom)}
@@ -58,6 +86,7 @@ export function HomePage() {
       isLoading={isLoading}
       items={items}
       onCreateFolder={handleCreateFolder}
+      onRenameFolder={handleRenameFolder}
       rootHref="/"
       title={breadcrumbTitle}
     />

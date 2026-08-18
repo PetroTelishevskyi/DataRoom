@@ -24,7 +24,7 @@ function formatFileSize(sizeBytes: number) {
 
 export function FileRow({ file }: FileRowProps) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_7rem_8rem] items-center gap-4 border-b px-4 py-3 last:border-b-0">
+    <div className="grid grid-cols-[minmax(0,1fr)_7rem_8rem_2.5rem] items-center gap-4 border-b px-4 py-3 last:border-b-0">
       <div className="flex min-w-0 items-center gap-3">
         <FileText
           aria-hidden
@@ -38,6 +38,7 @@ export function FileRow({ file }: FileRowProps) {
       <span className="text-right text-sm text-muted-foreground">
         {new Date(file.updatedAt).toLocaleDateString()}
       </span>
+      <span aria-hidden />
     </div>
   );
 }

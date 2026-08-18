@@ -29,6 +29,12 @@ type CreateChildFolderParams = {
   userId: string;
 };
 
+type RenameFolderParams = {
+  folderId: string;
+  name: string;
+  userId: string;
+};
+
 type FolderSummary = {
   id: string;
   name: string;
@@ -73,6 +79,14 @@ function toFolderSummary(folder: FolderSummary): FolderSummary {
     createdAt: folder.createdAt,
     updatedAt: folder.updatedAt,
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isPrismaUniqueError(error: unknown): boolean {
+  return isRecord(error) && error.code === "P2002";
 }
 
 @Injectable()
@@ -233,6 +247,71 @@ export class FoldersService {
     };
   }
 
+  async renameFolder(params: RenameFolderParams) {
+    const name = this.validateFolderName(params.name);
+    const folder = await this.prisma.folder.findFirst({
+      where: {
+        id: params.folderId,
+        kind: FolderKind.NORMAL,
+        dataRoom: {
+          ownerId: params.userId,
+        },
+      },
+      select: {
+        id: true,
+        parentId: true,
+      },
+    });
+
+    if (!folder || !folder.parentId) {
+      throw new NotFoundException();
+    }
+
+    const nameKey = normalizeResourceName(name);
+    const duplicateFolder = await this.prisma.folder.findFirst({
+      where: {
+        id: {
+          not: folder.id,
+        },
+        parentId: folder.parentId,
+        nameKey,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (duplicateFolder) {
+      this.throwFolderNameConflict();
+    }
+
+    try {
+      const updatedFolder = await this.prisma.folder.update({
+        where: {
+          id: folder.id,
+        },
+        data: {
+          name,
+          nameKey,
+        },
+        select: {
+          id: true,
+          name: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      return toFolderSummary(updatedFolder);
+    } catch (error) {
+      if (isPrismaUniqueError(error)) {
+        this.throwFolderNameConflict();
+      }
+
+      throw error;
+    }
+  }
+
   private async createFolder(params: {
     dataRoomId: string;
     name: string;
@@ -250,30 +329,34 @@ export class FoldersService {
     });
 
     if (duplicateFolder) {
-      throw new AppError(
-        "FOLDER_NAME_CONFLICT",
-        HttpStatus.CONFLICT,
-        "A folder with this name already exists here.",
-      );
+      this.throwFolderNameConflict();
     }
 
-    const folder = await this.prisma.folder.create({
-      data: {
-        dataRoomId: params.dataRoomId,
-        kind: FolderKind.NORMAL,
-        name: params.name,
-        nameKey,
-        parentId: params.parentId,
-      },
-      select: {
-        id: true,
-        name: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    try {
+      const folder = await this.prisma.folder.create({
+        data: {
+          dataRoomId: params.dataRoomId,
+          kind: FolderKind.NORMAL,
+          name: params.name,
+          nameKey,
+          parentId: params.parentId,
+        },
+        select: {
+          id: true,
+          name: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
 
-    return toFolderSummary(folder);
+      return toFolderSummary(folder);
+    } catch (error) {
+      if (isPrismaUniqueError(error)) {
+        this.throwFolderNameConflict();
+      }
+
+      throw error;
+    }
   }
 
   private async getBreadcrumbs(
@@ -328,5 +411,13 @@ export class FoldersService {
     }
 
     return normalizedName;
+  }
+
+  private throwFolderNameConflict(): never {
+    throw new AppError(
+      "FOLDER_NAME_CONFLICT",
+      HttpStatus.CONFLICT,
+      "A folder with this name already exists here.",
+    );
   }
 }

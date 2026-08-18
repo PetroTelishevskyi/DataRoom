@@ -3,8 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { toast } from "@/components/ui/toast/use-toast";
 import { ResourceBrowser } from "@/features/browser/components/resource-browser";
+import type { FolderResourceItem } from "@/features/data-rooms/data-room.types";
 import { dataRoomsQueryOptions } from "@/features/data-rooms/data-room-queries";
-import { createChildFolder } from "@/features/folders/folder-api";
+import { createChildFolder, renameFolder } from "@/features/folders/folder-api";
 import {
   folderContentsQueryOptions,
   folderQueryKeys,
@@ -43,12 +44,37 @@ export function FolderPage() {
     },
     [createFolder],
   );
+  const renameFolderMutation = useMutation({
+    mutationFn: (params: { folderId: string; name: string }) =>
+      renameFolder(params),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: folderQueryKeys.folderContents(folderId),
+      });
+
+      toast({
+        title: "Folder renamed",
+        variant: "success",
+      });
+    },
+  });
+  const { mutateAsync: renameFolderMutationAsync } = renameFolderMutation;
+  const handleRenameFolder = useCallback(
+    async (folder: FolderResourceItem, name: string) => {
+      await renameFolderMutationAsync({ folderId: folder.id, name });
+    },
+    [renameFolderMutationAsync],
+  );
 
   return (
     <ResourceBrowser
       accessRole={contents?.access.role ?? "OWNER"}
       breadcrumbs={contents?.breadcrumbs ?? []}
-      capabilities={{ canCreateFolder: true, canUpload: true }}
+      capabilities={{
+        canCreateFolder: true,
+        canRenameFolder: true,
+        canUpload: true,
+      }}
       getBreadcrumbHref={(breadcrumb) => `/folders/${breadcrumb.id}`}
       getFolderHref={(folder) => `/folders/${folder.id}`}
       hasResource={Boolean(folderId && contents?.folder)}
@@ -56,6 +82,7 @@ export function FolderPage() {
       isLoading={isLoading}
       items={contents?.items ?? []}
       onCreateFolder={handleCreateFolder}
+      onRenameFolder={handleRenameFolder}
       rootHref="/"
       title={dataRoom?.name ?? "Data Room"}
     />

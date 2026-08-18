@@ -25,6 +25,7 @@ export function ResourceBrowser({
   isLoading,
   items,
   onCreateFolder,
+  onRenameFolder,
   rootHref,
   title,
 }: ResourceBrowserProps) {
@@ -107,7 +108,12 @@ export function ResourceBrowser({
         {!isLoading && !isError && hasResource ? (
           <div className="flex min-h-0 flex-1 flex-col">
             {items.length ? (
-              <ResourceTable getFolderHref={getFolderHref} items={items} />
+              <ResourceTable
+                canRenameFolder={capabilities.canRenameFolder}
+                getFolderHref={getFolderHref}
+                items={items}
+                onRenameFolder={onRenameFolder}
+              />
             ) : (
               <BrowserEmptyState
                 capabilities={capabilities}

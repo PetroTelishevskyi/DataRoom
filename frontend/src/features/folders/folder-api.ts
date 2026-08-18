@@ -22,6 +22,11 @@ type CreateFolderResponse = {
   };
 };
 
+type RenameFolderParams = {
+  folderId: string;
+  name: string;
+};
+
 export async function getFolderContents(folderId: string) {
   const response = await apiRequest<DataRoomContentsResponse>(
     `/folders/${folderId}`,
@@ -48,6 +53,18 @@ export async function createChildFolder(params: CreateChildFolderParams) {
     {
       body: JSON.stringify({ name: params.name }),
       method: "POST",
+    },
+  );
+
+  return response.data.folder;
+}
+
+export async function renameFolder(params: RenameFolderParams) {
+  const response = await apiRequest<CreateFolderResponse>(
+    `/folders/${params.folderId}`,
+    {
+      body: JSON.stringify({ name: params.name }),
+      method: "PATCH",
     },
   );
 

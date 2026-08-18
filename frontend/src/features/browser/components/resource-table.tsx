@@ -7,8 +7,10 @@ import { FolderRow } from "./folder-row";
 import { ResourceTableHeader } from "./resource-table-header";
 
 type ResourceTableProps = {
+  canRenameFolder: boolean;
   getFolderHref: (folder: FolderResourceItem) => string;
   items: ResourceItem[];
+  onRenameFolder?: (folder: FolderResourceItem, name: string) => Promise<void>;
 };
 
 function sortResourceItems(items: ResourceItem[]) {
@@ -23,7 +25,12 @@ function sortResourceItems(items: ResourceItem[]) {
   });
 }
 
-export function ResourceTable({ getFolderHref, items }: ResourceTableProps) {
+export function ResourceTable({
+  canRenameFolder,
+  getFolderHref,
+  items,
+  onRenameFolder,
+}: ResourceTableProps) {
   const sortedItems = sortResourceItems(items);
 
   return (
@@ -32,9 +39,11 @@ export function ResourceTable({ getFolderHref, items }: ResourceTableProps) {
       {sortedItems.map((item) =>
         item.type === "FOLDER" ? (
           <FolderRow
+            canRename={canRenameFolder}
             folder={item}
             href={getFolderHref(item)}
             key={`${item.type}-${item.id}`}
+            onRenameFolder={onRenameFolder}
           />
         ) : (
           <FileRow file={item} key={`${item.type}-${item.id}`} />

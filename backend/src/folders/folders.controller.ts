@@ -1,7 +1,16 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from "@nestjs/common";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { CreateFolderDto } from "./dto/create-folder.dto";
+import { UpdateFolderDto } from "./dto/update-folder.dto";
 import { FoldersService } from "./folders.service";
 
 @Controller()
@@ -52,6 +61,25 @@ export class FoldersController {
     const folder = await this.foldersService.createChildFolder({
       name: createFolderDto.name,
       parentFolderId: folderId,
+      userId,
+    });
+
+    return {
+      data: {
+        folder,
+      },
+    };
+  }
+
+  @Patch("folders/:folderId")
+  async renameFolder(
+    @CurrentUser("id") userId: string,
+    @Param("folderId") folderId: string,
+    @Body() updateFolderDto: UpdateFolderDto,
+  ) {
+    const folder = await this.foldersService.renameFolder({
+      folderId,
+      name: updateFolderDto.name,
       userId,
     });
 
