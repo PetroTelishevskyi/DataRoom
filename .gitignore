@@ -65,7 +65,7 @@ docker-compose.override.yml
 
 # Local storage / uploads if created during development
 uploads/
-storage/
+/storage/
 .local-storage/
 
 # Test artifacts

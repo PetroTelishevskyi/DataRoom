@@ -7,6 +7,7 @@ import { DataRoomsModule } from "./data-rooms/data-rooms.module";
 import { FoldersModule } from "./folders/folders.module";
 import { HealthModule } from "./health/health.module";
 import { PrismaModule } from "./prisma/prisma.module";
+import { StorageModule } from "./storage/storage.module";
 import { UsersModule } from "./users/users.module";
 
 @Module({
@@ -22,6 +23,7 @@ import { UsersModule } from "./users/users.module";
     AuthModule,
     DataRoomsModule,
     FoldersModule,
+    StorageModule,
   ],
 })
 export class AppModule {}
