@@ -1,11 +1,12 @@
 import { Module } from "@nestjs/common";
+import { AuthorizationModule } from "../authorization/authorization.module";
 import { AuthModule } from "../auth/auth.module";
 import { UsersModule } from "../users/users.module";
 import { DataRoomsController } from "./data-rooms.controller";
 import { DataRoomsService } from "./data-rooms.service";
 
 @Module({
-  imports: [AuthModule, UsersModule],
+  imports: [AuthModule, AuthorizationModule, UsersModule],
   controllers: [DataRoomsController],
   providers: [DataRoomsService],
 })

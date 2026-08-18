@@ -4,6 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from "@nestjs/common";
+import { AuthorizationService } from "../authorization/authorization.service";
 import { AppError } from "../common/errors/app-error";
 import {
   hasControlCharacters,
@@ -126,14 +127,21 @@ function isPrismaNotFoundError(error: unknown): boolean {
 
 @Injectable()
 export class FoldersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly authorizationService: AuthorizationService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async createRootFolder(params: CreateRootFolderParams) {
     const name = this.validateFolderName(params.name);
-    const dataRoom = await this.prisma.dataRoom.findFirst({
+    await this.authorizationService.assertOwnsDataRoom(
+      params.userId,
+      params.dataRoomId,
+    );
+
+    const dataRoom = await this.prisma.dataRoom.findUnique({
       where: {
         id: params.dataRoomId,
-        ownerId: params.userId,
       },
       select: {
         id: true,
@@ -171,13 +179,15 @@ export class FoldersService {
 
   async createChildFolder(params: CreateChildFolderParams) {
     const name = this.validateFolderName(params.name);
+    await this.authorizationService.assertOwnsFolder(
+      params.userId,
+      params.parentFolderId,
+    );
+
     const parentFolder = await this.prisma.folder.findFirst({
       where: {
         id: params.parentFolderId,
         kind: FolderKind.NORMAL,
-        dataRoom: {
-          ownerId: params.userId,
-        },
       },
       select: {
         id: true,
@@ -197,13 +207,15 @@ export class FoldersService {
   }
 
   async getFolderContents(params: FolderQuery) {
+    const access = await this.authorizationService.resolveFolderReadAccess(
+      params.userId,
+      params.folderId,
+    );
+
     const folder = await this.prisma.folder.findFirst({
       where: {
         id: params.folderId,
         kind: FolderKind.NORMAL,
-        dataRoom: {
-          ownerId: params.userId,
-        },
       },
       select: {
         id: true,
@@ -278,20 +290,22 @@ export class FoldersService {
         hasNextPage: false,
       },
       access: {
-        role: "OWNER",
+        role: access.role,
       },
     };
   }
 
   async renameFolder(params: RenameFolderParams) {
     const name = this.validateFolderName(params.name);
+    await this.authorizationService.assertOwnsFolder(
+      params.userId,
+      params.folderId,
+    );
+
     const folder = await this.prisma.folder.findFirst({
       where: {
         id: params.folderId,
         kind: FolderKind.NORMAL,
-        dataRoom: {
-          ownerId: params.userId,
-        },
       },
       select: {
         id: true,
@@ -349,6 +363,11 @@ export class FoldersService {
   }
 
   async getDeletionPreview(params: FolderQuery): Promise<DeletionPreview> {
+    await this.authorizationService.assertOwnsFolder(
+      params.userId,
+      params.folderId,
+    );
+
     const [preview] = await this.prisma.$queryRaw<DeletionPreviewRow[]>`
       WITH RECURSIVE "subtree" AS (
         SELECT "folders"."id"
@@ -394,10 +413,14 @@ export class FoldersService {
   }
 
   async getFolderTree(params: DataRoomQuery): Promise<{ root: FolderTreeRoot }> {
-    const dataRoom = await this.prisma.dataRoom.findFirst({
+    await this.authorizationService.assertOwnsDataRoom(
+      params.userId,
+      params.dataRoomId,
+    );
+
+    const dataRoom = await this.prisma.dataRoom.findUnique({
       where: {
         id: params.dataRoomId,
-        ownerId: params.userId,
       },
       select: {
         id: true,
@@ -485,13 +508,15 @@ export class FoldersService {
   }
 
   async deleteFolder(params: FolderQuery): Promise<void> {
+    await this.authorizationService.assertOwnsFolder(
+      params.userId,
+      params.folderId,
+    );
+
     const folder = await this.prisma.folder.findFirst({
       where: {
         id: params.folderId,
         kind: FolderKind.NORMAL,
-        dataRoom: {
-          ownerId: params.userId,
-        },
       },
       select: {
         id: true,

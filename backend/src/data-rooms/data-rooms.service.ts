@@ -4,6 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from "@nestjs/common";
+import { AuthorizationService } from "../authorization/authorization.service";
 import { FileStatus, FolderKind } from "../generated/prisma/enums";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -47,7 +48,10 @@ function toDataRoomSummary(dataRoom: DataRoomSummary): DataRoomSummary {
 
 @Injectable()
 export class DataRoomsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly authorizationService: AuthorizationService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async listForOwner(userId: string): Promise<DataRoomSummary[]> {
     const dataRooms = await this.prisma.dataRoom.findMany({
@@ -67,10 +71,14 @@ export class DataRoomsService {
   }
 
   async getOwnedDataRoom(params: DataRoomQuery): Promise<DataRoomSummary> {
-    const dataRoom = await this.prisma.dataRoom.findFirst({
+    await this.authorizationService.assertOwnsDataRoom(
+      params.userId,
+      params.dataRoomId,
+    );
+
+    const dataRoom = await this.prisma.dataRoom.findUnique({
       where: {
         id: params.dataRoomId,
-        ownerId: params.userId,
       },
       select: {
         id: true,
@@ -88,10 +96,14 @@ export class DataRoomsService {
   }
 
   async getRootContents(params: DataRoomQuery) {
-    const dataRoom = await this.prisma.dataRoom.findFirst({
+    await this.authorizationService.assertOwnsDataRoom(
+      params.userId,
+      params.dataRoomId,
+    );
+
+    const dataRoom = await this.prisma.dataRoom.findUnique({
       where: {
         id: params.dataRoomId,
-        ownerId: params.userId,
       },
       select: {
         id: true,

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { AuthorizationService } from "../authorization/authorization.service";
 import { AppError } from "../common/errors/app-error";
 import {
   hasControlCharacters,
@@ -74,19 +75,22 @@ function isPrismaUniqueError(error: unknown): boolean {
 @Injectable()
 export class FilesService {
   constructor(
+    private readonly authorizationService: AuthorizationService,
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
   ) {}
 
   async initiateRootUpload(params: InitiateRootUploadParams) {
+    await this.authorizationService.assertOwnsDataRoom(
+      params.userId,
+      params.dataRoomId,
+    );
+
     const rootFolder = await this.prisma.folder.findFirst({
       where: {
         dataRoomId: params.dataRoomId,
         kind: FolderKind.ROOT,
-        dataRoom: {
-          ownerId: params.userId,
-        },
       },
       select: {
         dataRoomId: true,
@@ -108,13 +112,15 @@ export class FilesService {
   }
 
   async initiateFolderUpload(params: InitiateFolderUploadParams) {
+    await this.authorizationService.assertOwnsFolder(
+      params.userId,
+      params.folderId,
+    );
+
     const folder = await this.prisma.folder.findFirst({
       where: {
         id: params.folderId,
         kind: FolderKind.NORMAL,
-        dataRoom: {
-          ownerId: params.userId,
-        },
       },
       select: {
         dataRoomId: true,
@@ -136,13 +142,15 @@ export class FilesService {
   }
 
   async requestUploadUrl(params: FileQuery) {
+    await this.authorizationService.assertOwnsFile(
+      params.userId,
+      params.fileId,
+    );
+
     const file = await this.prisma.file.findFirst({
       where: {
         id: params.fileId,
         status: FileStatus.UPLOADING,
-        dataRoom: {
-          ownerId: params.userId,
-        },
       },
       select: {
         id: true,
@@ -171,12 +179,14 @@ export class FilesService {
   }
 
   async completeUpload(params: FileQuery): Promise<FileUploadSummary> {
+    await this.authorizationService.assertOwnsFile(
+      params.userId,
+      params.fileId,
+    );
+
     const file = await this.prisma.file.findFirst({
       where: {
         id: params.fileId,
-        dataRoom: {
-          ownerId: params.userId,
-        },
       },
       select: {
         id: true,
@@ -241,13 +251,15 @@ export class FilesService {
   }
 
   async requestViewUrl(params: FileQuery) {
+    await this.authorizationService.resolveFileReadAccess(
+      params.userId,
+      params.fileId,
+    );
+
     const file = await this.prisma.file.findFirst({
       where: {
         id: params.fileId,
         status: FileStatus.READY,
-        dataRoom: {
-          ownerId: params.userId,
-        },
       },
       select: {
         storageKey: true,
@@ -265,12 +277,14 @@ export class FilesService {
 
   async renameFile(params: RenameFileParams): Promise<FileUploadSummary> {
     const name = this.validateFileName(params.name);
+    await this.authorizationService.assertOwnsFile(
+      params.userId,
+      params.fileId,
+    );
+
     const file = await this.prisma.file.findFirst({
       where: {
         id: params.fileId,
-        dataRoom: {
-          ownerId: params.userId,
-        },
       },
       select: {
         folderId: true,
@@ -327,12 +341,14 @@ export class FilesService {
   }
 
   async moveFile(params: MoveFileParams): Promise<FileUploadSummary> {
+    await this.authorizationService.assertOwnsFile(
+      params.userId,
+      params.fileId,
+    );
+
     const file = await this.prisma.file.findFirst({
       where: {
         id: params.fileId,
-        dataRoom: {
-          ownerId: params.userId,
-        },
       },
       select: {
         dataRoomId: true,
@@ -391,13 +407,15 @@ export class FilesService {
   }
 
   async cancelUpload(params: FileQuery): Promise<void> {
+    await this.authorizationService.assertOwnsFile(
+      params.userId,
+      params.fileId,
+    );
+
     const file = await this.prisma.file.findFirst({
       where: {
         id: params.fileId,
         status: FileStatus.UPLOADING,
-        dataRoom: {
-          ownerId: params.userId,
-        },
       },
       select: {
         id: true,
@@ -418,12 +436,14 @@ export class FilesService {
   }
 
   async deleteFile(params: FileQuery): Promise<void> {
+    await this.authorizationService.assertOwnsFile(
+      params.userId,
+      params.fileId,
+    );
+
     const file = await this.prisma.file.findFirst({
       where: {
         id: params.fileId,
-        dataRoom: {
-          ownerId: params.userId,
-        },
       },
       select: {
         id: true,
@@ -517,13 +537,15 @@ export class FilesService {
     userId: string;
   }) {
     if (params.destination.type === "FOLDER") {
+      await this.authorizationService.assertOwnsFolder(
+        params.userId,
+        params.destination.id,
+      );
+
       const folder = await this.prisma.folder.findFirst({
         where: {
           id: params.destination.id,
           kind: FolderKind.NORMAL,
-          dataRoom: {
-            ownerId: params.userId,
-          },
         },
         select: {
           dataRoomId: true,
@@ -538,13 +560,15 @@ export class FilesService {
       return folder;
     }
 
+    await this.authorizationService.assertOwnsDataRoom(
+      params.userId,
+      params.destination.id,
+    );
+
     const rootFolder = await this.prisma.folder.findFirst({
       where: {
         dataRoomId: params.destination.id,
         kind: FolderKind.ROOT,
-        dataRoom: {
-          ownerId: params.userId,
-        },
       },
       select: {
         dataRoomId: true,
