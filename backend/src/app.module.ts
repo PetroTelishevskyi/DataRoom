@@ -8,6 +8,7 @@ import { FilesModule } from "./files/files.module";
 import { FoldersModule } from "./folders/folders.module";
 import { HealthModule } from "./health/health.module";
 import { PrismaModule } from "./prisma/prisma.module";
+import { SharesModule } from "./shares/shares.module";
 import { StorageModule } from "./storage/storage.module";
 import { UsersModule } from "./users/users.module";
 
@@ -25,6 +26,7 @@ import { UsersModule } from "./users/users.module";
     DataRoomsModule,
     FilesModule,
     FoldersModule,
+    SharesModule,
     StorageModule,
   ],
 })

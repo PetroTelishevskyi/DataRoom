@@ -41,6 +41,19 @@ export class UsersService {
     return user ? toPublicUser(user) : null;
   }
 
+  async findByEmail(email: string): Promise<PublicUser | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+      },
+    });
+
+    return user ? toPublicUser(user) : null;
+  }
+
   async findByEmailWithPasswordHash(
     email: string,
   ): Promise<UserWithPasswordHash | null> {
