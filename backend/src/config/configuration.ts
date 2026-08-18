@@ -4,11 +4,7 @@ export const configuration = () => ({
   databaseUrl: process.env.DATABASE_URL,
   authSecret: process.env.AUTH_SECRET,
   storage: {
-    bucket: process.env.STORAGE_BUCKET,
-    region: process.env.STORAGE_REGION,
-    endpoint: process.env.STORAGE_ENDPOINT,
-    accessKey: process.env.STORAGE_ACCESS_KEY,
-    secretKey: process.env.STORAGE_SECRET_KEY,
+    blobReadWriteToken: process.env.BLOB_READ_WRITE_TOKEN,
   },
   uploadUrlTtlSeconds: Number(process.env.UPLOAD_URL_TTL_SECONDS ?? 600),
   readUrlTtlSeconds: Number(process.env.READ_URL_TTL_SECONDS ?? 300),

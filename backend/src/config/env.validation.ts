@@ -25,22 +25,7 @@ class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
-  STORAGE_BUCKET!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  STORAGE_REGION!: string;
-
-  @IsUrl({ require_tld: false })
-  STORAGE_ENDPOINT!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  STORAGE_ACCESS_KEY!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  STORAGE_SECRET_KEY!: string;
+  BLOB_READ_WRITE_TOKEN!: string;
 
   @IsOptional()
   @IsInt()
