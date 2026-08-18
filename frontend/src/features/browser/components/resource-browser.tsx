@@ -9,6 +9,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { useBrowserActions } from "@/features/browser/use-browser-actions";
+import { UploadDropZone } from "@/features/uploads/components/upload-drop-zone";
 import type { ResourceBrowserProps } from "../browser.types";
 import { BrowserEmptyState } from "./browser-empty-state";
 import { BrowserErrorState } from "./browser-error-state";
@@ -113,7 +114,10 @@ export function ResourceBrowser({
         {!isLoading && (isError || !hasResource) ? <BrowserErrorState /> : null}
 
         {!isLoading && !isError && hasResource ? (
-          <div className="flex min-h-0 flex-1 flex-col">
+          <UploadDropZone
+            disabled={!capabilities.canUpload}
+            onDropFiles={onUploadFiles}
+          >
             {items.length ? (
               <ResourceTable
                 canDeleteFolder={capabilities.canDeleteFolder}
@@ -130,7 +134,7 @@ export function ResourceBrowser({
                 onUploadFiles={onUploadFiles}
               />
             )}
-          </div>
+          </UploadDropZone>
         ) : null}
       </div>
     </section>
