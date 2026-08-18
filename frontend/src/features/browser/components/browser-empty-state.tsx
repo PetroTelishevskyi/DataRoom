@@ -15,13 +15,13 @@ import type { BrowserCapabilities } from "../browser.types";
 type BrowserEmptyStateProps = {
   capabilities: BrowserCapabilities;
   onCreateFolder?: (name: string) => Promise<void>;
-  onUploadFile?: (file: File) => Promise<void>;
+  onUploadFiles?: (files: File[]) => void;
 };
 
 export function BrowserEmptyState({
   capabilities,
   onCreateFolder,
-  onUploadFile,
+  onUploadFiles,
 }: BrowserEmptyStateProps) {
   const createFolderButton = (
     <Button disabled={!capabilities.canCreateFolder} type="button">
@@ -54,7 +54,7 @@ export function BrowserEmptyState({
         )}
         <UploadFileButton
           disabled={!capabilities.canUpload}
-          onUploadFile={onUploadFile}
+          onUploadFiles={onUploadFiles}
         />
       </EmptyContent>
     </Empty>

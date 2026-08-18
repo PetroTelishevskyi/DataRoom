@@ -71,11 +71,15 @@ export async function cancelUpload(fileId: string) {
 export async function uploadFileToBlob(
   upload: UploadContract,
   file: File,
+  onProgress?: (progress: number) => void,
 ): Promise<void> {
   try {
     await put(upload.pathname, file, {
       access: "private",
       contentType: file.type,
+      onUploadProgress: ({ percentage }) => {
+        onProgress?.(percentage);
+      },
       token: upload.clientToken,
     });
   } catch {

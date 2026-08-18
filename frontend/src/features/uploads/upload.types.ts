@@ -4,6 +4,39 @@ export type UploadFileSummary = {
   status: "UPLOADING" | "READY";
 };
 
+export type UploadStatus =
+  | "queued"
+  | "preparing"
+  | "uploading"
+  | "finalizing"
+  | "success"
+  | "failed";
+
+export type UploadDestination =
+  | {
+      type: "data-room";
+      dataRoomId: string;
+    }
+  | {
+      type: "folder";
+      folderId: string;
+    };
+
+export type UploadQueueItem = {
+  id: string;
+  destination: UploadDestination;
+  errorMessage?: string;
+  fileName: string;
+  progress: number;
+  sizeBytes: number;
+  status: UploadStatus;
+};
+
+export type UploadQueueControls = {
+  setProgress: (progress: number) => void;
+  setStatus: (status: UploadStatus) => void;
+};
+
 export type UploadContract = {
   clientToken: string;
   url: string;
@@ -36,4 +69,10 @@ export type InitiateRootUploadParams = InitiateUploadParams & {
 
 export type InitiateFolderUploadParams = InitiateUploadParams & {
   folderId: string;
+};
+
+export type UploadQueueJob = {
+  destination: UploadDestination;
+  file: File;
+  run: (file: File, controls: UploadQueueControls) => Promise<void>;
 };

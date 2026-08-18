@@ -20,7 +20,8 @@ import {
   initiateFolderUpload,
   uploadFileToBlob,
 } from "@/features/uploads/uploads-api";
-import { ApiError } from "@/lib/api";
+import { useUploadQueue } from "@/features/uploads/upload-context";
+import type { UploadQueueControls } from "@/features/uploads/upload.types";
 
 function isPdfFile(file: File) {
   return (
@@ -31,6 +32,7 @@ function isPdfFile(file: File) {
 export function FolderPage() {
   const { folderId = "" } = useParams();
   const queryClient = useQueryClient();
+  const { enqueueUploads } = useUploadQueue();
   const dataRoomsQuery = useQuery(dataRoomsQueryOptions());
   const contentsQuery = useQuery({
     ...folderContentsQueryOptions(folderId),
@@ -102,8 +104,8 @@ export function FolderPage() {
     },
     [deleteFolderMutationAsync],
   );
-  const uploadFileMutation = useMutation({
-    mutationFn: async (file: File) => {
+  const uploadFolderFile = useCallback(
+    async (file: File, controls?: UploadQueueControls) => {
       if (!folderId) {
         return;
       }
@@ -114,47 +116,56 @@ export function FolderPage() {
       });
 
       try {
-        await uploadFileToBlob(initiatedUpload.upload, file);
+        controls?.setStatus("uploading");
+        await uploadFileToBlob(initiatedUpload.upload, file, (progress) => {
+          controls?.setProgress(progress);
+        });
+        controls?.setStatus("finalizing");
         await completeUpload(initiatedUpload.file.id);
       } catch (error) {
         await cancelUpload(initiatedUpload.file.id).catch(() => {});
         throw error;
       }
-    },
-    onSuccess: async () => {
+
       await queryClient.invalidateQueries({
         queryKey: folderQueryKeys.folderContents(folderId),
       });
-
-      toast({
-        title: "File uploaded",
-        variant: "success",
-      });
     },
-    onError: (error) => {
-      toast({
-        description:
-          error instanceof ApiError ? error.message : "Please try again.",
-        title: "Upload failed",
-        variant: "destructive",
-      });
-    },
-  });
-  const { mutateAsync: uploadFile } = uploadFileMutation;
-  const handleUploadFile = useCallback(
-    async (file: File) => {
-      if (!isPdfFile(file)) {
-        toast({
-          description: "Only PDF files can be uploaded.",
-          title: "Upload failed",
-          variant: "destructive",
-        });
+    [folderId, queryClient],
+  );
+  const handleUploadFiles = useCallback(
+    (files: File[]) => {
+      if (!folderId) {
         return;
       }
 
-      await uploadFile(file);
+      const validFiles = files.filter(isPdfFile);
+      const invalidFiles = files.filter((file) => !isPdfFile(file));
+
+      enqueueUploads({
+        jobs: [
+          ...validFiles.map((file) => ({
+            destination: {
+              folderId,
+              type: "folder" as const,
+            },
+            file,
+            run: uploadFolderFile,
+          })),
+          ...invalidFiles.map((file) => ({
+            destination: {
+              folderId,
+              type: "folder" as const,
+            },
+            file,
+            run: async () => {
+              throw new Error("Only PDF files can be uploaded.");
+            },
+          })),
+        ],
+      });
     },
-    [uploadFile],
+    [enqueueUploads, folderId, uploadFolderFile],
   );
 
   return (
@@ -176,7 +187,7 @@ export function FolderPage() {
       onCreateFolder={handleCreateFolder}
       onDeleteFolder={handleDeleteFolder}
       onRenameFolder={handleRenameFolder}
-      onUploadFile={handleUploadFile}
+      onUploadFiles={handleUploadFiles}
       rootHref="/"
       title={dataRoom?.name ?? "Data Room"}
     />

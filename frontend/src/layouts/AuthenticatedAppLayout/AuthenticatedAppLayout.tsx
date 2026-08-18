@@ -10,8 +10,13 @@ import { cn } from "@/lib/utils";
 
 function AuthenticatedAppShell() {
   const { logout, user } = useAuth();
-  const { canCreateFolder, canUpload, itemCount, onCreateFolder, onUploadFile } =
-    useBrowserActions();
+  const {
+    canCreateFolder,
+    canUpload,
+    itemCount,
+    onCreateFolder,
+    onUploadFiles,
+  } = useBrowserActions();
   const createFolderButton = (
     <Button
       className="mt-5 w-full justify-start"
@@ -43,7 +48,7 @@ function AuthenticatedAppShell() {
         <UploadFileButton
           className="mt-2 w-full justify-start"
           disabled={!canUpload}
-          onUploadFile={onUploadFile}
+          onUploadFiles={onUploadFiles}
           size="sm"
           variant="outline"
         />
