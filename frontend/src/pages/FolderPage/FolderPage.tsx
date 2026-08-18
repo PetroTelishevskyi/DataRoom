@@ -3,8 +3,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { toast } from "@/components/ui/toast/use-toast";
 import { ResourceBrowser } from "@/features/browser/components/resource-browser";
-import type { FolderResourceItem } from "@/features/data-rooms/data-room.types";
+import type {
+  FileResourceItem,
+  FolderResourceItem,
+} from "@/features/data-rooms/data-room.types";
 import { dataRoomsQueryOptions } from "@/features/data-rooms/data-room-queries";
+import { deleteFile, renameFile } from "@/features/files/files-api";
 import {
   createChildFolder,
   deleteFolder,
@@ -83,6 +87,47 @@ export function FolderPage() {
       await renameFolderMutationAsync({ folderId: folder.id, name });
     },
     [renameFolderMutationAsync],
+  );
+  const renameFileMutation = useMutation({
+    mutationFn: (params: { fileId: string; name: string }) =>
+      renameFile(params),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: folderQueryKeys.folderContents(folderId),
+      });
+
+      toast({
+        title: "File renamed",
+        variant: "success",
+      });
+    },
+  });
+  const { mutateAsync: renameFileMutationAsync } = renameFileMutation;
+  const handleRenameFile = useCallback(
+    async (file: FileResourceItem, name: string) => {
+      await renameFileMutationAsync({ fileId: file.id, name });
+    },
+    [renameFileMutationAsync],
+  );
+  const deleteFileMutation = useMutation({
+    mutationFn: (fileId: string) => deleteFile(fileId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: folderQueryKeys.folderContents(folderId),
+      });
+
+      toast({
+        title: "File deleted",
+        variant: "success",
+      });
+    },
+  });
+  const { mutateAsync: deleteFileMutationAsync } = deleteFileMutation;
+  const handleDeleteFile = useCallback(
+    async (file: FileResourceItem) => {
+      await deleteFileMutationAsync(file.id);
+    },
+    [deleteFileMutationAsync],
   );
   const deleteFolderMutation = useMutation({
     mutationFn: (folderId: string) => deleteFolder(folderId),
@@ -174,8 +219,12 @@ export function FolderPage() {
       breadcrumbs={contents?.breadcrumbs ?? []}
       capabilities={{
         canCreateFolder: true,
+        canDeleteFile: true,
         canDeleteFolder: true,
+        canMoveFile: true,
+        canRenameFile: true,
         canRenameFolder: true,
+        canShare: true,
         canUpload: true,
       }}
       getBreadcrumbHref={(breadcrumb) => `/folders/${breadcrumb.id}`}
@@ -185,7 +234,9 @@ export function FolderPage() {
       isLoading={isLoading}
       items={contents?.items ?? []}
       onCreateFolder={handleCreateFolder}
+      onDeleteFile={handleDeleteFile}
       onDeleteFolder={handleDeleteFolder}
+      onRenameFile={handleRenameFile}
       onRenameFolder={handleRenameFolder}
       onUploadFiles={handleUploadFiles}
       rootHref="/"

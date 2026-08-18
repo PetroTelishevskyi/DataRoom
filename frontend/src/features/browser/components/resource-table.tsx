@@ -1,60 +1,101 @@
 import type {
-  FolderResourceItem,
-  ResourceItem,
-} from "@/features/data-rooms/data-room.types";
-import { FileRow } from "./file-row";
-import { FolderRow } from "./folder-row";
-import { ResourceTableHeader } from "./resource-table-header";
+	FileResourceItem,
+	FolderResourceItem,
+	ResourceItem,
+} from '@/features/data-rooms/data-room.types'
+import { FileRow } from './file-row'
+import { FolderCard } from './folder-card'
+import { ResourceTableHeader } from './resource-table-header'
 
 type ResourceTableProps = {
-  canDeleteFolder: boolean;
-  canRenameFolder: boolean;
-  getFolderHref: (folder: FolderResourceItem) => string;
-  items: ResourceItem[];
-  onDeleteFolder?: (folder: FolderResourceItem) => Promise<void>;
-  onRenameFolder?: (folder: FolderResourceItem, name: string) => Promise<void>;
-};
+	canDeleteFile: boolean
+	canDeleteFolder: boolean
+	canMoveFile: boolean
+	canRenameFile: boolean
+	canRenameFolder: boolean
+	canShare: boolean
+	getFolderHref: (folder: FolderResourceItem) => string
+	items: ResourceItem[]
+	onDeleteFile?: (file: FileResourceItem) => Promise<void>
+	onDeleteFolder?: (folder: FolderResourceItem) => Promise<void>
+	onRenameFile?: (file: FileResourceItem, name: string) => Promise<void>
+	onRenameFolder?: (folder: FolderResourceItem, name: string) => Promise<void>
+}
 
 function sortResourceItems(items: ResourceItem[]) {
-  return [...items].sort((firstItem, secondItem) => {
-    if (firstItem.type !== secondItem.type) {
-      return firstItem.type === "FOLDER" ? -1 : 1;
-    }
-
-    return firstItem.name.localeCompare(secondItem.name, undefined, {
-      sensitivity: "base",
-    });
-  });
+	return [...items].sort((firstItem, secondItem) => {
+		return firstItem.name.localeCompare(secondItem.name, undefined, {
+			sensitivity: 'base',
+		})
+	})
 }
 
 export function ResourceTable({
-  canDeleteFolder,
-  canRenameFolder,
-  getFolderHref,
-  items,
-  onDeleteFolder,
-  onRenameFolder,
+	canDeleteFile,
+	canDeleteFolder,
+	canMoveFile,
+	canRenameFile,
+	canRenameFolder,
+	canShare,
+	getFolderHref,
+	items,
+	onDeleteFile,
+	onDeleteFolder,
+	onRenameFile,
+	onRenameFolder,
 }: ResourceTableProps) {
-  const sortedItems = sortResourceItems(items);
+	const folders = sortResourceItems(items).filter(
+		(item): item is FolderResourceItem => item.type === 'FOLDER',
+	)
+	const files = sortResourceItems(items).filter(
+		(item): item is FileResourceItem => item.type === 'FILE',
+	)
 
-  return (
-    <div className="overflow-hidden rounded-lg border">
-      <ResourceTableHeader />
-      {sortedItems.map((item) =>
-        item.type === "FOLDER" ? (
-          <FolderRow
-            canDelete={canDeleteFolder}
-            canRename={canRenameFolder}
-            folder={item}
-            href={getFolderHref(item)}
-            key={`${item.type}-${item.id}`}
-            onDeleteFolder={onDeleteFolder}
-            onRenameFolder={onRenameFolder}
-          />
-        ) : (
-          <FileRow file={item} key={`${item.type}-${item.id}`} />
-        ),
-      )}
-    </div>
-  );
+	return (
+		<div className='flex min-h-0 flex-1 flex-col gap-8'>
+			{folders.length ? (
+				<section>
+					<h2 className='mb-3 text-lg font-semibold tracking-tight'>
+						Folders ({folders.length})
+					</h2>
+					<div className='grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'>
+						{folders.map(folder => (
+							<FolderCard
+								canDelete={canDeleteFolder}
+								canRename={canRenameFolder}
+								folder={folder}
+								href={getFolderHref(folder)}
+								key={`${folder.type}-${folder.id}`}
+								onDeleteFolder={onDeleteFolder}
+								onRenameFolder={onRenameFolder}
+							/>
+						))}
+					</div>
+				</section>
+			) : null}
+
+			{files.length ? (
+				<section className='min-h-0'>
+					<h2 className='mb-3 text-lg font-semibold tracking-tight'>
+						Files ({files.length})
+					</h2>
+					<div className='overflow-hidden rounded-lg border'>
+						<ResourceTableHeader />
+						{files.map(file => (
+							<FileRow
+								canDelete={canDeleteFile}
+								canMove={canMoveFile}
+								canRename={canRenameFile}
+								canShare={canShare}
+								file={file}
+								key={`${file.type}-${file.id}`}
+								onDeleteFile={onDeleteFile}
+								onRenameFile={onRenameFile}
+							/>
+						))}
+					</div>
+				</section>
+			) : null}
+		</div>
+	)
 }

@@ -19,7 +19,11 @@ import {
 } from "@/features/uploads/uploads-api";
 import { useUploadQueue } from "@/features/uploads/upload-context";
 import type { UploadQueueControls } from "@/features/uploads/upload.types";
-import type { FolderResourceItem } from "@/features/data-rooms/data-room.types";
+import type {
+  FileResourceItem,
+  FolderResourceItem,
+} from "@/features/data-rooms/data-room.types";
+import { deleteFile, renameFile } from "@/features/files/files-api";
 import { toast } from "@/components/ui/toast/use-toast";
 
 function isPdfFile(file: File) {
@@ -87,6 +91,51 @@ export function HomePage() {
       await renameFolderMutationAsync({ folderId: folder.id, name });
     },
     [renameFolderMutationAsync],
+  );
+  const renameFileMutation = useMutation({
+    mutationFn: (params: { fileId: string; name: string }) =>
+      renameFile(params),
+    onSuccess: async () => {
+      if (dataRoom) {
+        await queryClient.invalidateQueries({
+          queryKey: dataRoomQueryKeys.roomContents(dataRoom.id),
+        });
+      }
+
+      toast({
+        title: "File renamed",
+        variant: "success",
+      });
+    },
+  });
+  const { mutateAsync: renameFileMutationAsync } = renameFileMutation;
+  const handleRenameFile = useCallback(
+    async (file: FileResourceItem, name: string) => {
+      await renameFileMutationAsync({ fileId: file.id, name });
+    },
+    [renameFileMutationAsync],
+  );
+  const deleteFileMutation = useMutation({
+    mutationFn: (fileId: string) => deleteFile(fileId),
+    onSuccess: async () => {
+      if (dataRoom) {
+        await queryClient.invalidateQueries({
+          queryKey: dataRoomQueryKeys.roomContents(dataRoom.id),
+        });
+      }
+
+      toast({
+        title: "File deleted",
+        variant: "success",
+      });
+    },
+  });
+  const { mutateAsync: deleteFileMutationAsync } = deleteFileMutation;
+  const handleDeleteFile = useCallback(
+    async (file: FileResourceItem) => {
+      await deleteFileMutationAsync(file.id);
+    },
+    [deleteFileMutationAsync],
   );
   const deleteFolderMutation = useMutation({
     mutationFn: (folderId: string) => deleteFolder(folderId),
@@ -180,8 +229,12 @@ export function HomePage() {
       breadcrumbs={contentsQuery.data?.breadcrumbs ?? []}
       capabilities={{
         canCreateFolder: true,
+        canDeleteFile: true,
         canDeleteFolder: true,
+        canMoveFile: true,
+        canRenameFile: true,
         canRenameFolder: true,
+        canShare: true,
         canUpload: true,
       }}
       getBreadcrumbHref={(breadcrumb) => `/folders/${breadcrumb.id}`}
@@ -191,7 +244,9 @@ export function HomePage() {
       isLoading={isLoading}
       items={items}
       onCreateFolder={handleCreateFolder}
+      onDeleteFile={handleDeleteFile}
       onDeleteFolder={handleDeleteFolder}
+      onRenameFile={handleRenameFile}
       onRenameFolder={handleRenameFolder}
       onUploadFiles={handleUploadFiles}
       rootHref="/"

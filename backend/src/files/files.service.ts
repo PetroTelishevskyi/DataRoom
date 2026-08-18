@@ -39,6 +39,10 @@ type FileQuery = {
   userId: string;
 };
 
+type RenameFileParams = FileQuery & {
+  name: string;
+};
+
 type FileUploadSummary = {
   id: string;
   name: string;
@@ -245,11 +249,100 @@ export class FilesService {
     });
   }
 
+  async renameFile(params: RenameFileParams): Promise<FileUploadSummary> {
+    const name = this.validateFileName(params.name);
+    const file = await this.prisma.file.findFirst({
+      where: {
+        id: params.fileId,
+        dataRoom: {
+          ownerId: params.userId,
+        },
+      },
+      select: {
+        folderId: true,
+        id: true,
+      },
+    });
+
+    if (!file) {
+      throw new NotFoundException();
+    }
+
+    const nameKey = normalizeResourceName(name);
+    const duplicateFile = await this.prisma.file.findFirst({
+      where: {
+        folderId: file.folderId,
+        id: {
+          not: file.id,
+        },
+        nameKey,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (duplicateFile) {
+      this.throwFileNameConflict();
+    }
+
+    try {
+      const updatedFile = await this.prisma.file.update({
+        where: {
+          id: file.id,
+        },
+        data: {
+          name,
+          nameKey,
+        },
+        select: {
+          id: true,
+          name: true,
+          status: true,
+        },
+      });
+
+      return this.toFileUploadSummary(updatedFile);
+    } catch (error) {
+      if (isPrismaUniqueError(error)) {
+        this.throwFileNameConflict();
+      }
+
+      throw error;
+    }
+  }
+
   async cancelUpload(params: FileQuery): Promise<void> {
     const file = await this.prisma.file.findFirst({
       where: {
         id: params.fileId,
         status: FileStatus.UPLOADING,
+        dataRoom: {
+          ownerId: params.userId,
+        },
+      },
+      select: {
+        id: true,
+        storageKey: true,
+      },
+    });
+
+    if (!file) {
+      throw new NotFoundException();
+    }
+
+    await this.prisma.file.delete({
+      where: {
+        id: file.id,
+      },
+    });
+    await this.storageService.deleteObject(file.storageKey).catch(() => {});
+  }
+
+  async deleteFile(params: FileQuery): Promise<void> {
+    const file = await this.prisma.file.findFirst({
+      where: {
+        id: params.fileId,
         dataRoom: {
           ownerId: params.userId,
         },

@@ -13,6 +13,7 @@ import {
   updateUploadQueueRecord,
   type UploadQueueRecord,
 } from "./upload-manager";
+import { ApiError } from "@/lib/api";
 import type { UploadQueueItem } from "./upload.types";
 
 function createQueueId(): string {
@@ -63,6 +64,7 @@ export function UploadProvider({ children }: PropsWithChildren) {
 
       activeCountRef.current += 1;
       updateRecord(id, {
+        errorCode: undefined,
         errorMessage: undefined,
         progress: 0,
         status: "preparing",
@@ -85,6 +87,7 @@ export function UploadProvider({ children }: PropsWithChildren) {
         })
         .catch((error: unknown) => {
           updateRecord(id, {
+            errorCode: error instanceof ApiError ? error.code : undefined,
             errorMessage:
               error instanceof Error ? error.message : "Upload failed.",
             progress: 0,
@@ -128,8 +131,41 @@ export function UploadProvider({ children }: PropsWithChildren) {
       recordsRef.current.set(
         id,
         updateUploadQueueRecord(record, {
+          errorCode: undefined,
           errorMessage: undefined,
           progress: 0,
+          status: "queued",
+        }),
+      );
+      queueRef.current.push(id);
+      syncItems();
+      processQueue();
+    },
+    [processQueue, syncItems],
+  );
+
+  const renameUpload = useCallback(
+    (id: string, fileName: string) => {
+      const record = recordsRef.current.get(id);
+
+      if (!record || record.status !== "failed") {
+        return;
+      }
+
+      const renamedFile = new File([record.file], fileName, {
+        lastModified: record.file.lastModified,
+        type: record.file.type,
+      });
+
+      recordsRef.current.set(
+        id,
+        updateUploadQueueRecord(record, {
+          errorCode: undefined,
+          errorMessage: undefined,
+          file: renamedFile,
+          fileName,
+          progress: 0,
+          sizeBytes: renamedFile.size,
           status: "queued",
         }),
       );
@@ -162,6 +198,7 @@ export function UploadProvider({ children }: PropsWithChildren) {
       items,
       queueVersion,
       removeUpload,
+      renameUpload,
       retryUpload,
     }),
     [
@@ -170,6 +207,7 @@ export function UploadProvider({ children }: PropsWithChildren) {
       items,
       queueVersion,
       removeUpload,
+      renameUpload,
       retryUpload,
     ],
   );

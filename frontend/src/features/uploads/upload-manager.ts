@@ -29,6 +29,7 @@ export function toUploadQueueItem(record: UploadQueueRecord): UploadQueueItem {
   return {
     id: record.id,
     destination: record.destination,
+    errorCode: record.errorCode,
     errorMessage: record.errorMessage,
     fileName: record.fileName,
     progress: record.progress,
@@ -39,7 +40,12 @@ export function toUploadQueueItem(record: UploadQueueRecord): UploadQueueItem {
 
 export function updateUploadQueueRecord(
   record: UploadQueueRecord,
-  patch: Partial<Pick<UploadQueueRecord, "errorMessage" | "progress">> & {
+  patch: Partial<
+    Pick<
+      UploadQueueRecord,
+      "errorCode" | "errorMessage" | "file" | "fileName" | "progress" | "sizeBytes"
+    >
+  > & {
     status?: UploadStatus;
   },
 ): UploadQueueRecord {

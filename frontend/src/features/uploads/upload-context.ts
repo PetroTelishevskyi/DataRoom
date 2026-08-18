@@ -11,6 +11,7 @@ export type UploadContextValue = {
   items: UploadQueueItem[];
   queueVersion: number;
   removeUpload: (id: string) => void;
+  renameUpload: (id: string, fileName: string) => void;
   retryUpload: (id: string) => void;
 };
 

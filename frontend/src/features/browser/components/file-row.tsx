@@ -1,11 +1,21 @@
 import type { FileResourceItem } from '@/features/data-rooms/data-room.types'
+import { DeleteFileDialog } from '@/features/files/components/delete-file-dialog'
+import { RenameFileDialog } from '@/features/files/components/rename-file-dialog'
 import { cn } from '@/lib/utils'
 import { FileText } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ResourceActionsMenu } from './resource-actions-menu'
 import { RESOURCE_TABLE_GRID_CLASS } from './resource-table-layout'
 
 type FileRowProps = {
+	canDelete: boolean
+	canMove: boolean
+	canRename: boolean
+	canShare: boolean
 	file: FileResourceItem
+	onDeleteFile?: (file: FileResourceItem) => Promise<void>
+	onRenameFile?: (file: FileResourceItem, name: string) => Promise<void>
 }
 
 function formatFileSize(sizeBytes: number) {
@@ -25,8 +35,21 @@ function formatFileSize(sizeBytes: number) {
 	return `${size.toFixed(size >= 10 ? 0 : 1)} ${units[unitIndex]}`
 }
 
-export function FileRow({ file }: FileRowProps) {
+export function FileRow({
+	canDelete,
+	canMove,
+	canRename,
+	canShare,
+	file,
+	onDeleteFile,
+	onRenameFile,
+}: FileRowProps) {
+	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+	const [isRenameOpen, setIsRenameOpen] = useState(false)
+	const navigate = useNavigate()
 	const canView = file.status === 'READY'
+	const fileHref = `/files/${file.id}`
+	const fileRouteState = { fileName: file.name }
 
 	return (
 		<div
@@ -38,8 +61,8 @@ export function FileRow({ file }: FileRowProps) {
 			{canView ? (
 				<Link
 					className='flex min-w-0 items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
-					state={{ fileName: file.name }}
-					to={`/files/${file.id}`}
+					state={fileRouteState}
+					to={fileHref}
 				>
 					<FileText
 						aria-hidden
@@ -62,7 +85,47 @@ export function FileRow({ file }: FileRowProps) {
 			<span className='text-right text-sm text-muted-foreground'>
 				{new Date(file.updatedAt).toLocaleDateString()}
 			</span>
-			<span aria-hidden />
+			<div className='flex justify-end'>
+				<ResourceActionsMenu
+					canDelete={canDelete}
+					canMove={canMove}
+					canOpen={canView}
+					canRename={canRename}
+					canShare={canShare}
+					onDelete={
+						canDelete && onDeleteFile ? () => setIsDeleteOpen(true) : undefined
+					}
+					onMove={undefined}
+					onOpen={
+						canView
+							? () => navigate(fileHref, { state: fileRouteState })
+							: undefined
+					}
+					onRename={
+						canRename && onRenameFile ? () => setIsRenameOpen(true) : undefined
+					}
+					onShare={undefined}
+					showMove
+					showOpen
+					showShare
+				/>
+				{canRename && onRenameFile ? (
+					<RenameFileDialog
+						currentName={file.name}
+						onOpenChange={setIsRenameOpen}
+						onRenameFile={(name) => onRenameFile(file, name)}
+						open={isRenameOpen}
+					/>
+				) : null}
+				{canDelete && onDeleteFile ? (
+					<DeleteFileDialog
+						fileName={file.name}
+						onDeleteFile={() => onDeleteFile(file)}
+						onOpenChange={setIsDeleteOpen}
+						open={isDeleteOpen}
+					/>
+				) : null}
+			</div>
 		</div>
 	)
 }

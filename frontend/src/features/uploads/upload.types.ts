@@ -25,6 +25,7 @@ export type UploadDestination =
 export type UploadQueueItem = {
   id: string;
   destination: UploadDestination;
+  errorCode?: string;
   errorMessage?: string;
   fileName: string;
   progress: number;

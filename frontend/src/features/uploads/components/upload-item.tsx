@@ -3,16 +3,19 @@ import {
   CheckCircle2,
   Clock,
   Loader2,
+  Pencil,
   RefreshCcw,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { UploadQueueItem, UploadStatus } from "../upload.types";
+import { RenameUploadDialog } from "./rename-upload-dialog";
 
 type UploadItemProps = {
   item: UploadQueueItem;
   onRemove: (id: string) => void;
+  onRename: (id: string, fileName: string) => void;
   onRetry: (id: string) => void;
 };
 
@@ -46,8 +49,15 @@ function StatusIcon({ status }: { status: UploadStatus }) {
   );
 }
 
-export function UploadItem({ item, onRemove, onRetry }: UploadItemProps) {
-  const canRetry = item.status === "failed";
+export function UploadItem({
+  item,
+  onRemove,
+  onRename,
+  onRetry,
+}: UploadItemProps) {
+  const canRename =
+    item.status === "failed" && item.errorCode === "FILE_NAME_CONFLICT";
+  const canRetry = item.status === "failed" && !canRename;
   const canRemove =
     item.status === "queued" ||
     item.status === "failed" ||
@@ -89,6 +99,17 @@ export function UploadItem({ item, onRemove, onRetry }: UploadItemProps) {
           ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          {canRename ? (
+            <RenameUploadDialog
+              currentName={item.fileName}
+              onRenameUpload={(fileName) => onRename(item.id, fileName)}
+            >
+              <Button size="sm" type="button" variant="ghost">
+                <Pencil aria-hidden className="h-4 w-4" />
+                Rename
+              </Button>
+            </RenameUploadDialog>
+          ) : null}
           {canRetry ? (
             <Button
               onClick={() => onRetry(item.id)}

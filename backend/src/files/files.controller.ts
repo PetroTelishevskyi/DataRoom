@@ -5,12 +5,14 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from "@nestjs/common";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { InitiateUploadDto } from "./dto/initiate-upload.dto";
+import { UpdateFileDto } from "./dto/update-file.dto";
 import { FilesService } from "./files.service";
 
 @Controller()
@@ -105,6 +107,25 @@ export class FilesController {
     };
   }
 
+  @Patch("files/:fileId")
+  async renameFile(
+    @CurrentUser("id") userId: string,
+    @Param("fileId") fileId: string,
+    @Body() updateFileDto: UpdateFileDto,
+  ) {
+    const file = await this.filesService.renameFile({
+      fileId,
+      name: updateFileDto.name,
+      userId,
+    });
+
+    return {
+      data: {
+        file,
+      },
+    };
+  }
+
   @Delete("files/:fileId/upload")
   @HttpCode(HttpStatus.NO_CONTENT)
   async cancelUpload(
@@ -112,6 +133,18 @@ export class FilesController {
     @Param("fileId") fileId: string,
   ) {
     await this.filesService.cancelUpload({
+      fileId,
+      userId,
+    });
+  }
+
+  @Delete("files/:fileId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteFile(
+    @CurrentUser("id") userId: string,
+    @Param("fileId") fileId: string,
+  ) {
+    await this.filesService.deleteFile({
       fileId,
       userId,
     });
