@@ -1,5 +1,10 @@
 import { Injectable } from "@nestjs/common";
+import { FolderKind } from "../generated/prisma/enums";
 import { PrismaService } from "../prisma/prisma.service";
+
+const DEFAULT_DATA_ROOM_NAME = "My Data Room";
+const ROOT_FOLDER_NAME = "ROOT";
+const ROOT_FOLDER_NAME_KEY = "root";
 
 export type PublicUser = {
   id: string;
@@ -62,6 +67,18 @@ export class UsersService {
         email: params.email,
         passwordHash: params.passwordHash,
         name: params.name,
+        ownedDataRooms: {
+          create: {
+            name: DEFAULT_DATA_ROOM_NAME,
+            folders: {
+              create: {
+                kind: FolderKind.ROOT,
+                name: ROOT_FOLDER_NAME,
+                nameKey: ROOT_FOLDER_NAME_KEY,
+              },
+            },
+          },
+        },
       },
       select: {
         id: true,
