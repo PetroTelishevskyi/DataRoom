@@ -70,3 +70,13 @@ export type DataRoomResponse = {
 export type DataRoomContentsResponse = {
   data: DataRoomContents;
 };
+
+export type FolderDeletionPreview = {
+  fileCount: number;
+  folderCount: number;
+  totalSizeBytes: number;
+};
+
+export type FolderDeletionPreviewResponse = {
+  data: FolderDeletionPreview;
+};

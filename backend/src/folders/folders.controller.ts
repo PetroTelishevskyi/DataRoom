@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -52,6 +54,21 @@ export class FoldersController {
     };
   }
 
+  @Get("folders/:folderId/deletion-preview")
+  async getDeletionPreview(
+    @CurrentUser("id") userId: string,
+    @Param("folderId") folderId: string,
+  ) {
+    const deletionPreview = await this.foldersService.getDeletionPreview({
+      folderId,
+      userId,
+    });
+
+    return {
+      data: deletionPreview,
+    };
+  }
+
   @Post("folders/:folderId/folders")
   async createChildFolder(
     @CurrentUser("id") userId: string,
@@ -88,5 +105,17 @@ export class FoldersController {
         folder,
       },
     };
+  }
+
+  @Delete("folders/:folderId")
+  @HttpCode(204)
+  async deleteFolder(
+    @CurrentUser("id") userId: string,
+    @Param("folderId") folderId: string,
+  ) {
+    await this.foldersService.deleteFolder({
+      folderId,
+      userId,
+    });
   }
 }

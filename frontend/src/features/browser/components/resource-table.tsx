@@ -7,9 +7,11 @@ import { FolderRow } from "./folder-row";
 import { ResourceTableHeader } from "./resource-table-header";
 
 type ResourceTableProps = {
+  canDeleteFolder: boolean;
   canRenameFolder: boolean;
   getFolderHref: (folder: FolderResourceItem) => string;
   items: ResourceItem[];
+  onDeleteFolder?: (folder: FolderResourceItem) => Promise<void>;
   onRenameFolder?: (folder: FolderResourceItem, name: string) => Promise<void>;
 };
 
@@ -26,9 +28,11 @@ function sortResourceItems(items: ResourceItem[]) {
 }
 
 export function ResourceTable({
+  canDeleteFolder,
   canRenameFolder,
   getFolderHref,
   items,
+  onDeleteFolder,
   onRenameFolder,
 }: ResourceTableProps) {
   const sortedItems = sortResourceItems(items);
@@ -39,10 +43,12 @@ export function ResourceTable({
       {sortedItems.map((item) =>
         item.type === "FOLDER" ? (
           <FolderRow
+            canDelete={canDeleteFolder}
             canRename={canRenameFolder}
             folder={item}
             href={getFolderHref(item)}
             key={`${item.type}-${item.id}`}
+            onDeleteFolder={onDeleteFolder}
             onRenameFolder={onRenameFolder}
           />
         ) : (

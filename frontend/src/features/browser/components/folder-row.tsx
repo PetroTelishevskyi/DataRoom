@@ -2,22 +2,28 @@ import { useState } from "react";
 import { Folder } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { FolderResourceItem } from "@/features/data-rooms/data-room.types";
+import { DeleteFolderDialog } from "@/features/folders/components/delete-folder-dialog";
 import { RenameFolderDialog } from "@/features/folders/components/rename-folder-dialog";
 import { ResourceActionsMenu } from "./resource-actions-menu";
 
 type FolderRowProps = {
+  canDelete: boolean;
   canRename: boolean;
   folder: FolderResourceItem;
   href: string;
+  onDeleteFolder?: (folder: FolderResourceItem) => Promise<void>;
   onRenameFolder?: (folder: FolderResourceItem, name: string) => Promise<void>;
 };
 
 export function FolderRow({
+  canDelete,
   canRename,
   folder,
   href,
+  onDeleteFolder,
   onRenameFolder,
 }: FolderRowProps) {
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
 
   return (
@@ -35,6 +41,11 @@ export function FolderRow({
       </span>
       <div className="flex justify-end">
         <ResourceActionsMenu
+          onDelete={
+            canDelete && onDeleteFolder
+              ? () => setIsDeleteOpen(true)
+              : undefined
+          }
           onRename={
             canRename && onRenameFolder
               ? () => setIsRenameOpen(true)
@@ -47,6 +58,15 @@ export function FolderRow({
             onOpenChange={setIsRenameOpen}
             onRenameFolder={(name) => onRenameFolder(folder, name)}
             open={isRenameOpen}
+          />
+        ) : null}
+        {canDelete && onDeleteFolder ? (
+          <DeleteFolderDialog
+            folderId={folder.id}
+            folderName={folder.name}
+            onDeleteFolder={() => onDeleteFolder(folder)}
+            onOpenChange={setIsDeleteOpen}
+            open={isDeleteOpen}
           />
         ) : null}
       </div>

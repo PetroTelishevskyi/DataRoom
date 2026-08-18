@@ -1,17 +1,22 @@
-import { MoreHorizontal, Pencil } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 type ResourceActionsMenuProps = {
+  onDelete?: () => void;
   onRename?: () => void;
 };
 
-export function ResourceActionsMenu({ onRename }: ResourceActionsMenuProps) {
+export function ResourceActionsMenu({
+  onDelete,
+  onRename,
+}: ResourceActionsMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -29,6 +34,15 @@ export function ResourceActionsMenu({ onRename }: ResourceActionsMenuProps) {
         <DropdownMenuItem disabled={!onRename} onSelect={onRename}>
           <Pencil aria-hidden className="h-4 w-4" />
           Rename
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="text-destructive focus:text-destructive"
+          disabled={!onDelete}
+          onSelect={onDelete}
+        >
+          <Trash2 aria-hidden className="h-4 w-4" />
+          Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -35,6 +35,18 @@ type RenameFolderParams = {
   userId: string;
 };
 
+type DeletionPreview = {
+  fileCount: number;
+  folderCount: number;
+  totalSizeBytes: number;
+};
+
+type DeletionPreviewRow = {
+  fileCount: bigint;
+  folderCount: bigint;
+  totalSizeBytes: bigint;
+};
+
 type FolderSummary = {
   id: string;
   name: string;
@@ -87,6 +99,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isPrismaUniqueError(error: unknown): boolean {
   return isRecord(error) && error.code === "P2002";
+}
+
+function isPrismaNotFoundError(error: unknown): boolean {
+  return isRecord(error) && error.code === "P2025";
 }
 
 @Injectable()
@@ -306,6 +322,84 @@ export class FoldersService {
     } catch (error) {
       if (isPrismaUniqueError(error)) {
         this.throwFolderNameConflict();
+      }
+
+      throw error;
+    }
+  }
+
+  async getDeletionPreview(params: FolderQuery): Promise<DeletionPreview> {
+    const [preview] = await this.prisma.$queryRaw<DeletionPreviewRow[]>`
+      WITH RECURSIVE "subtree" AS (
+        SELECT "folders"."id"
+        FROM "folders"
+        INNER JOIN "data_rooms"
+          ON "data_rooms"."id" = "folders"."dataRoomId"
+        WHERE "folders"."id" = ${params.folderId}
+          AND "folders"."kind" = 'NORMAL'
+          AND "data_rooms"."ownerId" = ${params.userId}
+
+        UNION ALL
+
+        SELECT "child"."id"
+        FROM "folders" AS "child"
+        INNER JOIN "subtree"
+          ON "child"."parentId" = "subtree"."id"
+        WHERE "child"."kind" = 'NORMAL'
+      )
+      SELECT
+        (SELECT COUNT(*) FROM "subtree")::bigint AS "folderCount",
+        (SELECT COUNT(*)
+          FROM "files"
+          WHERE "files"."folderId" IN (SELECT "id" FROM "subtree")
+        )::bigint AS "fileCount",
+        COALESCE(
+          (SELECT SUM("files"."sizeBytes")
+            FROM "files"
+            WHERE "files"."folderId" IN (SELECT "id" FROM "subtree")
+          ),
+          0
+        )::bigint AS "totalSizeBytes";
+    `;
+
+    if (!preview || preview.folderCount === 0n) {
+      throw new NotFoundException();
+    }
+
+    return {
+      fileCount: Number(preview.fileCount),
+      folderCount: Number(preview.folderCount),
+      totalSizeBytes: Number(preview.totalSizeBytes),
+    };
+  }
+
+  async deleteFolder(params: FolderQuery): Promise<void> {
+    const folder = await this.prisma.folder.findFirst({
+      where: {
+        id: params.folderId,
+        kind: FolderKind.NORMAL,
+        dataRoom: {
+          ownerId: params.userId,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!folder) {
+      throw new NotFoundException();
+    }
+
+    try {
+      await this.prisma.folder.delete({
+        where: {
+          id: folder.id,
+        },
+      });
+    } catch (error) {
+      if (isPrismaNotFoundError(error)) {
+        throw new NotFoundException();
       }
 
       throw error;

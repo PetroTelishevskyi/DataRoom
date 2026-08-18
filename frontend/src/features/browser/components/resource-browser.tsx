@@ -25,6 +25,7 @@ export function ResourceBrowser({
   isLoading,
   items,
   onCreateFolder,
+  onDeleteFolder,
   onRenameFolder,
   rootHref,
   title,
@@ -109,9 +110,11 @@ export function ResourceBrowser({
           <div className="flex min-h-0 flex-1 flex-col">
             {items.length ? (
               <ResourceTable
+                canDeleteFolder={capabilities.canDeleteFolder}
                 canRenameFolder={capabilities.canRenameFolder}
                 getFolderHref={getFolderHref}
                 items={items}
+                onDeleteFolder={onDeleteFolder}
                 onRenameFolder={onRenameFolder}
               />
             ) : (

@@ -1,6 +1,7 @@
 import { apiRequest } from "@/lib/api";
 import type {
   DataRoomContentsResponse,
+  FolderDeletionPreviewResponse,
   FolderSummary,
 } from "@/features/data-rooms/data-room.types";
 
@@ -69,4 +70,18 @@ export async function renameFolder(params: RenameFolderParams) {
   );
 
   return response.data.folder;
+}
+
+export async function getFolderDeletionPreview(folderId: string) {
+  const response = await apiRequest<FolderDeletionPreviewResponse>(
+    `/folders/${folderId}/deletion-preview`,
+  );
+
+  return response.data;
+}
+
+export async function deleteFolder(folderId: string) {
+  await apiRequest<void>(`/folders/${folderId}`, {
+    method: "DELETE",
+  });
 }

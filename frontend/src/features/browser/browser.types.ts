@@ -7,6 +7,7 @@ import type {
 
 export type BrowserCapabilities = {
   canCreateFolder: boolean;
+  canDeleteFolder: boolean;
   canRenameFolder: boolean;
   canUpload: boolean;
 };
@@ -22,6 +23,7 @@ export type ResourceBrowserProps = {
   isLoading: boolean;
   items: ResourceItem[];
   onCreateFolder?: (name: string) => Promise<void>;
+  onDeleteFolder?: (folder: FolderResourceItem) => Promise<void>;
   onRenameFolder?: (folder: FolderResourceItem, name: string) => Promise<void>;
   rootHref: string;
   title: string;

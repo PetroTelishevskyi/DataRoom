@@ -6,7 +6,11 @@ import {
   dataRoomContentsQueryOptions,
   dataRoomsQueryOptions,
 } from "@/features/data-rooms/data-room-queries";
-import { createRootFolder, renameFolder } from "@/features/folders/folder-api";
+import {
+  createRootFolder,
+  deleteFolder,
+  renameFolder,
+} from "@/features/folders/folder-api";
 import type { FolderResourceItem } from "@/features/data-rooms/data-room.types";
 import { toast } from "@/components/ui/toast/use-toast";
 
@@ -69,6 +73,28 @@ export function HomePage() {
     },
     [renameFolderMutationAsync],
   );
+  const deleteFolderMutation = useMutation({
+    mutationFn: (folderId: string) => deleteFolder(folderId),
+    onSuccess: async () => {
+      if (dataRoom) {
+        await queryClient.invalidateQueries({
+          queryKey: dataRoomQueryKeys.roomContents(dataRoom.id),
+        });
+      }
+
+      toast({
+        title: "Folder deleted",
+        variant: "success",
+      });
+    },
+  });
+  const { mutateAsync: deleteFolderMutationAsync } = deleteFolderMutation;
+  const handleDeleteFolder = useCallback(
+    async (folder: FolderResourceItem) => {
+      await deleteFolderMutationAsync(folder.id);
+    },
+    [deleteFolderMutationAsync],
+  );
 
   return (
     <ResourceBrowser
@@ -76,6 +102,7 @@ export function HomePage() {
       breadcrumbs={contentsQuery.data?.breadcrumbs ?? []}
       capabilities={{
         canCreateFolder: true,
+        canDeleteFolder: true,
         canRenameFolder: true,
         canUpload: true,
       }}
@@ -86,6 +113,7 @@ export function HomePage() {
       isLoading={isLoading}
       items={items}
       onCreateFolder={handleCreateFolder}
+      onDeleteFolder={handleDeleteFolder}
       onRenameFolder={handleRenameFolder}
       rootHref="/"
       title={breadcrumbTitle}

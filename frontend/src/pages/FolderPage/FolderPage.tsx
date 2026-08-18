@@ -5,7 +5,11 @@ import { toast } from "@/components/ui/toast/use-toast";
 import { ResourceBrowser } from "@/features/browser/components/resource-browser";
 import type { FolderResourceItem } from "@/features/data-rooms/data-room.types";
 import { dataRoomsQueryOptions } from "@/features/data-rooms/data-room-queries";
-import { createChildFolder, renameFolder } from "@/features/folders/folder-api";
+import {
+  createChildFolder,
+  deleteFolder,
+  renameFolder,
+} from "@/features/folders/folder-api";
 import {
   folderContentsQueryOptions,
   folderQueryKeys,
@@ -65,6 +69,26 @@ export function FolderPage() {
     },
     [renameFolderMutationAsync],
   );
+  const deleteFolderMutation = useMutation({
+    mutationFn: (folderId: string) => deleteFolder(folderId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: folderQueryKeys.folderContents(folderId),
+      });
+
+      toast({
+        title: "Folder deleted",
+        variant: "success",
+      });
+    },
+  });
+  const { mutateAsync: deleteFolderMutationAsync } = deleteFolderMutation;
+  const handleDeleteFolder = useCallback(
+    async (folder: FolderResourceItem) => {
+      await deleteFolderMutationAsync(folder.id);
+    },
+    [deleteFolderMutationAsync],
+  );
 
   return (
     <ResourceBrowser
@@ -72,6 +96,7 @@ export function FolderPage() {
       breadcrumbs={contents?.breadcrumbs ?? []}
       capabilities={{
         canCreateFolder: true,
+        canDeleteFolder: true,
         canRenameFolder: true,
         canUpload: true,
       }}
@@ -82,6 +107,7 @@ export function FolderPage() {
       isLoading={isLoading}
       items={contents?.items ?? []}
       onCreateFolder={handleCreateFolder}
+      onDeleteFolder={handleDeleteFolder}
       onRenameFolder={handleRenameFolder}
       rootHref="/"
       title={dataRoom?.name ?? "Data Room"}
