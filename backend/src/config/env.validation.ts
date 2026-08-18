@@ -4,13 +4,16 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  Matches,
   Min,
   validateSync,
 } from "class-validator";
 import { plainToInstance } from "class-transformer";
 
 class EnvironmentVariables {
-  @IsUrl({ require_tld: false })
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^postgres(ql)?:\/\//)
   DATABASE_URL!: string;
 
   @IsUrl({ require_tld: false })

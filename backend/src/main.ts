@@ -1,7 +1,9 @@
 import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
+import * as cookieParser from "cookie-parser";
 import { AppModule } from "./app.module";
+import { ApiExceptionFilter } from "./common/filters/api-exception.filter";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,12 +15,14 @@ async function bootstrap() {
     origin: frontendUrl,
     credentials: true,
   });
+  app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       transform: true,
     }),
   );
+  app.useGlobalFilters(new ApiExceptionFilter());
   app.enableShutdownHooks();
 
   const port = configService.get<number>("PORT", 3000);
