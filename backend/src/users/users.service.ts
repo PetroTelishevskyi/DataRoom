@@ -55,7 +55,7 @@ export class UsersService {
   async create(params: {
     email: string;
     passwordHash: string;
-    name?: string;
+    name: string;
   }): Promise<PublicUser> {
     const user = await this.prisma.user.create({
       data: {

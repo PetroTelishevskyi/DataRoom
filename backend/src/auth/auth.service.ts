@@ -13,10 +13,10 @@ function normalizeEmail(email: string): string {
   return email.trim().toLocaleLowerCase("en-US");
 }
 
-function normalizeName(name?: string): string | undefined {
-  const normalizedName = name?.trim();
+function normalizeName(name: string): string {
+  const normalizedName = name.trim();
 
-  return normalizedName || undefined;
+  return normalizedName;
 }
 
 function isPrismaUniqueError(error: unknown): boolean {
@@ -40,7 +40,7 @@ export class AuthService {
   async registerUser(params: {
     email: string;
     password: string;
-    name?: string;
+    name: string;
   }): Promise<AuthUser> {
     const passwordHash = await this.passwordService.hash(params.password);
     const email = normalizeEmail(params.email);
