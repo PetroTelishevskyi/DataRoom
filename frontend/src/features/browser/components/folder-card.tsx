@@ -38,7 +38,11 @@ export function FolderCard({
 				<div className='min-w-0'>
 					<p className='truncate text-base font-medium'>{folder.name}</p>
 					<p className='mt-1 text-xs text-muted-foreground'>
-						Updated {new Date(folder.updatedAt).toLocaleDateString()}
+						{new Intl.DateTimeFormat('en-GB', {
+							day: '2-digit',
+							month: '2-digit',
+							year: 'numeric',
+						}).format(new Date(folder.updatedAt))}
 					</p>
 				</div>
 			</Link>
