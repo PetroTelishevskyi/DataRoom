@@ -64,7 +64,7 @@ Thumbs.db
 docker-compose.override.yml
 
 # Local storage / uploads if created during development
-uploads/
+/uploads/
 /storage/
 .local-storage/
 

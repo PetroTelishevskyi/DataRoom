@@ -5,11 +5,13 @@ import { BrowserActionProvider } from "@/features/browser/browser-action-provide
 import { useBrowserActions } from "@/features/browser/use-browser-actions";
 import { useAuth } from "@/features/auth/use-auth";
 import { CreateFolderDialog } from "@/features/folders/components/create-folder-dialog";
+import { UploadFileButton } from "@/features/uploads/components/upload-file-button";
 import { cn } from "@/lib/utils";
 
 function AuthenticatedAppShell() {
   const { logout, user } = useAuth();
-  const { canCreateFolder, itemCount, onCreateFolder } = useBrowserActions();
+  const { canCreateFolder, canUpload, itemCount, onCreateFolder, onUploadFile } =
+    useBrowserActions();
   const createFolderButton = (
     <Button
       className="mt-5 w-full justify-start"
@@ -38,6 +40,13 @@ function AuthenticatedAppShell() {
         ) : (
           createFolderButton
         )}
+        <UploadFileButton
+          className="mt-2 w-full justify-start"
+          disabled={!canUpload}
+          onUploadFile={onUploadFile}
+          size="sm"
+          variant="outline"
+        />
 
         <nav className="mt-8 space-y-1">
           <NavLink

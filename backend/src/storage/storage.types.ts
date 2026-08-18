@@ -7,9 +7,11 @@ export type CreateUploadUrlParams = {
 };
 
 export type CreateUploadUrlResult = {
+  clientToken: string;
   url: string;
   method: "PUT";
   headers: Record<string, string>;
+  pathname: string;
   expiresAt: Date;
 };
 

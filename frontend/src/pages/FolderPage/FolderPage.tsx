@@ -14,6 +14,19 @@ import {
   folderContentsQueryOptions,
   folderQueryKeys,
 } from "@/features/folders/folder-queries";
+import {
+  cancelUpload,
+  completeUpload,
+  initiateFolderUpload,
+  uploadFileToBlob,
+} from "@/features/uploads/uploads-api";
+import { ApiError } from "@/lib/api";
+
+function isPdfFile(file: File) {
+  return (
+    file.type === "application/pdf" && file.name.toLowerCase().endsWith(".pdf")
+  );
+}
 
 export function FolderPage() {
   const { folderId = "" } = useParams();
@@ -89,6 +102,60 @@ export function FolderPage() {
     },
     [deleteFolderMutationAsync],
   );
+  const uploadFileMutation = useMutation({
+    mutationFn: async (file: File) => {
+      if (!folderId) {
+        return;
+      }
+
+      const initiatedUpload = await initiateFolderUpload({
+        file,
+        folderId,
+      });
+
+      try {
+        await uploadFileToBlob(initiatedUpload.upload, file);
+        await completeUpload(initiatedUpload.file.id);
+      } catch (error) {
+        await cancelUpload(initiatedUpload.file.id).catch(() => {});
+        throw error;
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: folderQueryKeys.folderContents(folderId),
+      });
+
+      toast({
+        title: "File uploaded",
+        variant: "success",
+      });
+    },
+    onError: (error) => {
+      toast({
+        description:
+          error instanceof ApiError ? error.message : "Please try again.",
+        title: "Upload failed",
+        variant: "destructive",
+      });
+    },
+  });
+  const { mutateAsync: uploadFile } = uploadFileMutation;
+  const handleUploadFile = useCallback(
+    async (file: File) => {
+      if (!isPdfFile(file)) {
+        toast({
+          description: "Only PDF files can be uploaded.",
+          title: "Upload failed",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await uploadFile(file);
+    },
+    [uploadFile],
+  );
 
   return (
     <ResourceBrowser
@@ -109,6 +176,7 @@ export function FolderPage() {
       onCreateFolder={handleCreateFolder}
       onDeleteFolder={handleDeleteFolder}
       onRenameFolder={handleRenameFolder}
+      onUploadFile={handleUploadFile}
       rootHref="/"
       title={dataRoom?.name ?? "Data Room"}
     />

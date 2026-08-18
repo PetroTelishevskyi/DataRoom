@@ -1,10 +1,15 @@
 import { createContext } from "react";
-import type { CreateFolderHandler } from "./browser-action.types";
+import type {
+  CreateFolderHandler,
+  UploadFileHandler,
+} from "./browser-action.types";
 
 export type BrowserActionState = {
   canCreateFolder: boolean;
+  canUpload: boolean;
   itemCount: number | null;
   onCreateFolder?: CreateFolderHandler;
+  onUploadFile?: UploadFileHandler;
 };
 
 export type BrowserActionContextValue = BrowserActionState & {
@@ -13,6 +18,7 @@ export type BrowserActionContextValue = BrowserActionState & {
 
 export const defaultBrowserActions: BrowserActionState = {
   canCreateFolder: false,
+  canUpload: false,
   itemCount: null,
 };
 

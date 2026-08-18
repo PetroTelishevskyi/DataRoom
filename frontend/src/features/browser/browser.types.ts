@@ -25,6 +25,7 @@ export type ResourceBrowserProps = {
   onCreateFolder?: (name: string) => Promise<void>;
   onDeleteFolder?: (folder: FolderResourceItem) => Promise<void>;
   onRenameFolder?: (folder: FolderResourceItem, name: string) => Promise<void>;
+  onUploadFile?: (file: File) => Promise<void>;
   rootHref: string;
   title: string;
 };

@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from "@nestjs/common";
-import { FolderKind } from "../generated/prisma/enums";
+import { FileStatus, FolderKind } from "../generated/prisma/enums";
 import { PrismaService } from "../prisma/prisma.service";
 
 type DataRoomQuery = {
@@ -136,6 +136,7 @@ export class DataRoomsService {
       this.prisma.file.findMany({
         where: {
           folderId: rootFolder.id,
+          status: FileStatus.READY,
         },
         orderBy: [{ nameKey: "asc" }, { id: "asc" }],
         select: {

@@ -1,4 +1,4 @@
-import { FileText, FolderPlus, Upload } from "lucide-react";
+import { FileText, FolderPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -9,16 +9,19 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { CreateFolderDialog } from "@/features/folders/components/create-folder-dialog";
+import { UploadFileButton } from "@/features/uploads/components/upload-file-button";
 import type { BrowserCapabilities } from "../browser.types";
 
 type BrowserEmptyStateProps = {
   capabilities: BrowserCapabilities;
   onCreateFolder?: (name: string) => Promise<void>;
+  onUploadFile?: (file: File) => Promise<void>;
 };
 
 export function BrowserEmptyState({
   capabilities,
   onCreateFolder,
+  onUploadFile,
 }: BrowserEmptyStateProps) {
   const createFolderButton = (
     <Button disabled={!capabilities.canCreateFolder} type="button">
@@ -49,10 +52,10 @@ export function BrowserEmptyState({
         ) : (
           createFolderButton
         )}
-        <Button disabled={!capabilities.canUpload} type="button" variant="outline">
-          <Upload aria-hidden className="h-4 w-4" />
-          Import File
-        </Button>
+        <UploadFileButton
+          disabled={!capabilities.canUpload}
+          onUploadFile={onUploadFile}
+        />
       </EmptyContent>
     </Empty>
   );

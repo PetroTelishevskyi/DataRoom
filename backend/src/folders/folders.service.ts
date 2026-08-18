@@ -9,7 +9,7 @@ import {
   hasControlCharacters,
   normalizeResourceName,
 } from "../common/resources/resource-name";
-import { FolderKind } from "../generated/prisma/enums";
+import { FileStatus, FolderKind } from "../generated/prisma/enums";
 import { PrismaService } from "../prisma/prisma.service";
 
 type FolderQuery = {
@@ -217,6 +217,7 @@ export class FoldersService {
       this.prisma.file.findMany({
         where: {
           folderId: folder.id,
+          status: FileStatus.READY,
         },
         orderBy: [{ nameKey: "asc" }, { id: "asc" }],
         select: {

@@ -27,6 +27,7 @@ export function ResourceBrowser({
   onCreateFolder,
   onDeleteFolder,
   onRenameFolder,
+  onUploadFile,
   rootHref,
   title,
 }: ResourceBrowserProps) {
@@ -35,22 +36,27 @@ export function ResourceBrowser({
   useEffect(() => {
     setBrowserActions({
       canCreateFolder: capabilities.canCreateFolder && hasResource && !isError,
+      canUpload: capabilities.canUpload && hasResource && !isError,
       itemCount: hasResource && !isError ? items.length : null,
       onCreateFolder,
+      onUploadFile,
     });
 
     return () => {
       setBrowserActions({
         canCreateFolder: false,
+        canUpload: false,
         itemCount: null,
       });
     };
   }, [
     capabilities.canCreateFolder,
+    capabilities.canUpload,
     hasResource,
     isError,
     items.length,
     onCreateFolder,
+    onUploadFile,
     setBrowserActions,
   ]);
 
@@ -121,6 +127,7 @@ export function ResourceBrowser({
               <BrowserEmptyState
                 capabilities={capabilities}
                 onCreateFolder={onCreateFolder}
+                onUploadFile={onUploadFile}
               />
             )}
           </div>
