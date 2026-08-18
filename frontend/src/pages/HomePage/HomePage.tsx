@@ -23,8 +23,14 @@ import type {
   FileResourceItem,
   FolderResourceItem,
 } from "@/features/data-rooms/data-room.types";
-import { deleteFile, renameFile } from "@/features/files/files-api";
+import {
+  deleteFile,
+  moveFile,
+  renameFile,
+  type MoveFileDestination,
+} from "@/features/files/files-api";
 import { toast } from "@/components/ui/toast/use-toast";
+import { folderQueryKeys } from "@/features/folders/folder-queries";
 
 function isPdfFile(file: File) {
   return (
@@ -137,6 +143,39 @@ export function HomePage() {
     },
     [deleteFileMutationAsync],
   );
+  const moveFileMutation = useMutation({
+    mutationFn: (params: {
+      destination: MoveFileDestination;
+      fileId: string;
+    }) => moveFile(params),
+    onSuccess: async () => {
+      if (dataRoom) {
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: dataRoomQueryKeys.roomContents(dataRoom.id),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: folderQueryKeys.folderTree(dataRoom.id),
+          }),
+        ]);
+      }
+
+      toast({
+        title: "File moved",
+        variant: "success",
+      });
+    },
+  });
+  const { mutateAsync: moveFileMutationAsync } = moveFileMutation;
+  const handleMoveFile = useCallback(
+    async (file: FileResourceItem, destination: MoveFileDestination) => {
+      await moveFileMutationAsync({
+        destination,
+        fileId: file.id,
+      });
+    },
+    [moveFileMutationAsync],
+  );
   const deleteFolderMutation = useMutation({
     mutationFn: (folderId: string) => deleteFolder(folderId),
     onSuccess: async () => {
@@ -237,6 +276,7 @@ export function HomePage() {
         canShare: true,
         canUpload: true,
       }}
+      dataRoomId={dataRoom?.id}
       getBreadcrumbHref={(breadcrumb) => `/folders/${breadcrumb.id}`}
       getFolderHref={(folder) => `/folders/${folder.id}`}
       hasResource={Boolean(dataRoom)}
@@ -246,6 +286,7 @@ export function HomePage() {
       onCreateFolder={handleCreateFolder}
       onDeleteFile={handleDeleteFile}
       onDeleteFolder={handleDeleteFolder}
+      onMoveFile={handleMoveFile}
       onRenameFile={handleRenameFile}
       onRenameFolder={handleRenameFolder}
       onUploadFiles={handleUploadFiles}

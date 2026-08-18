@@ -7,8 +7,16 @@ import type {
   FileResourceItem,
   FolderResourceItem,
 } from "@/features/data-rooms/data-room.types";
-import { dataRoomsQueryOptions } from "@/features/data-rooms/data-room-queries";
-import { deleteFile, renameFile } from "@/features/files/files-api";
+import {
+  dataRoomQueryKeys,
+  dataRoomsQueryOptions,
+} from "@/features/data-rooms/data-room-queries";
+import {
+  deleteFile,
+  moveFile,
+  renameFile,
+  type MoveFileDestination,
+} from "@/features/files/files-api";
 import {
   createChildFolder,
   deleteFolder,
@@ -129,6 +137,47 @@ export function FolderPage() {
     },
     [deleteFileMutationAsync],
   );
+  const moveFileMutation = useMutation({
+    mutationFn: (params: {
+      destination: MoveFileDestination;
+      fileId: string;
+    }) => moveFile(params),
+    onSuccess: async () => {
+      const invalidations = [
+        queryClient.invalidateQueries({
+          queryKey: folderQueryKeys.folderContents(folderId),
+        }),
+      ];
+
+      if (dataRoom) {
+        invalidations.push(
+          queryClient.invalidateQueries({
+            queryKey: dataRoomQueryKeys.roomContents(dataRoom.id),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: folderQueryKeys.folderTree(dataRoom.id),
+          }),
+        );
+      }
+
+      await Promise.all(invalidations);
+
+      toast({
+        title: "File moved",
+        variant: "success",
+      });
+    },
+  });
+  const { mutateAsync: moveFileMutationAsync } = moveFileMutation;
+  const handleMoveFile = useCallback(
+    async (file: FileResourceItem, destination: MoveFileDestination) => {
+      await moveFileMutationAsync({
+        destination,
+        fileId: file.id,
+      });
+    },
+    [moveFileMutationAsync],
+  );
   const deleteFolderMutation = useMutation({
     mutationFn: (folderId: string) => deleteFolder(folderId),
     onSuccess: async () => {
@@ -227,6 +276,7 @@ export function FolderPage() {
         canShare: true,
         canUpload: true,
       }}
+      dataRoomId={dataRoom?.id}
       getBreadcrumbHref={(breadcrumb) => `/folders/${breadcrumb.id}`}
       getFolderHref={(folder) => `/folders/${folder.id}`}
       hasResource={Boolean(folderId && contents?.folder)}
@@ -236,6 +286,7 @@ export function FolderPage() {
       onCreateFolder={handleCreateFolder}
       onDeleteFile={handleDeleteFile}
       onDeleteFolder={handleDeleteFolder}
+      onMoveFile={handleMoveFile}
       onRenameFile={handleRenameFile}
       onRenameFolder={handleRenameFolder}
       onUploadFiles={handleUploadFiles}

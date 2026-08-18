@@ -3,6 +3,7 @@ import type {
 	FolderResourceItem,
 	ResourceItem,
 } from '@/features/data-rooms/data-room.types'
+import type { MoveFileDestination } from '@/features/files/files-api'
 import { FileRow } from './file-row'
 import { FolderCard } from './folder-card'
 import { ResourceTableHeader } from './resource-table-header'
@@ -14,10 +15,15 @@ type ResourceTableProps = {
 	canRenameFile: boolean
 	canRenameFolder: boolean
 	canShare: boolean
+	dataRoomId?: string
 	getFolderHref: (folder: FolderResourceItem) => string
 	items: ResourceItem[]
 	onDeleteFile?: (file: FileResourceItem) => Promise<void>
 	onDeleteFolder?: (folder: FolderResourceItem) => Promise<void>
+	onMoveFile?: (
+		file: FileResourceItem,
+		destination: MoveFileDestination,
+	) => Promise<void>
 	onRenameFile?: (file: FileResourceItem, name: string) => Promise<void>
 	onRenameFolder?: (folder: FolderResourceItem, name: string) => Promise<void>
 }
@@ -37,10 +43,12 @@ export function ResourceTable({
 	canRenameFile,
 	canRenameFolder,
 	canShare,
+	dataRoomId,
 	getFolderHref,
 	items,
 	onDeleteFile,
 	onDeleteFolder,
+	onMoveFile,
 	onRenameFile,
 	onRenameFolder,
 }: ResourceTableProps) {
@@ -87,9 +95,11 @@ export function ResourceTable({
 								canMove={canMoveFile}
 								canRename={canRenameFile}
 								canShare={canShare}
+								dataRoomId={dataRoomId}
 								file={file}
 								key={`${file.type}-${file.id}`}
 								onDeleteFile={onDeleteFile}
+								onMoveFile={onMoveFile}
 								onRenameFile={onRenameFile}
 							/>
 						))}

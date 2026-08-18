@@ -28,12 +28,40 @@ type RenameFolderParams = {
   name: string;
 };
 
+export type FolderTreeNode = {
+  type: "FOLDER";
+  id: string;
+  name: string;
+  children: FolderTreeNode[];
+};
+
+export type FolderTreeRoot = {
+  type: "DATA_ROOM_ROOT";
+  id: string;
+  name: string;
+  children: FolderTreeNode[];
+};
+
+type FolderTreeResponse = {
+  data: {
+    root: FolderTreeRoot;
+  };
+};
+
 export async function getFolderContents(folderId: string) {
   const response = await apiRequest<DataRoomContentsResponse>(
     `/folders/${folderId}`,
   );
 
   return response.data;
+}
+
+export async function getFolderTree(dataRoomId: string) {
+  const response = await apiRequest<FolderTreeResponse>(
+    `/data-rooms/${dataRoomId}/folder-tree`,
+  );
+
+  return response.data.root;
 }
 
 export async function createRootFolder(params: CreateRootFolderParams) {

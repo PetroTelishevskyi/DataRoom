@@ -43,6 +43,20 @@ type RenameFileParams = FileQuery & {
   name: string;
 };
 
+type MoveFileDestination =
+  | {
+      type: "FOLDER";
+      id: string;
+    }
+  | {
+      type: "DATA_ROOM_ROOT";
+      id: string;
+    };
+
+type MoveFileParams = FileQuery & {
+  destination: MoveFileDestination;
+};
+
 type FileUploadSummary = {
   id: string;
   name: string;
@@ -312,6 +326,70 @@ export class FilesService {
     }
   }
 
+  async moveFile(params: MoveFileParams): Promise<FileUploadSummary> {
+    const file = await this.prisma.file.findFirst({
+      where: {
+        id: params.fileId,
+        dataRoom: {
+          ownerId: params.userId,
+        },
+      },
+      select: {
+        dataRoomId: true,
+        folderId: true,
+        id: true,
+        name: true,
+        nameKey: true,
+      },
+    });
+
+    if (!file) {
+      throw new NotFoundException();
+    }
+
+    const destinationFolder = await this.getMoveDestinationFolder({
+      destination: params.destination,
+      userId: params.userId,
+    });
+
+    if (destinationFolder.dataRoomId !== file.dataRoomId) {
+      throw new NotFoundException();
+    }
+
+    const duplicateFile = await this.prisma.file.findFirst({
+      where: {
+        folderId: destinationFolder.id,
+        id: {
+          not: file.id,
+        },
+        nameKey: file.nameKey,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (duplicateFile) {
+      this.throwFileNameConflict();
+    }
+
+    const updatedFile = await this.prisma.file.update({
+      where: {
+        id: file.id,
+      },
+      data: {
+        folderId: destinationFolder.id,
+      },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+      },
+    });
+
+    return this.toFileUploadSummary(updatedFile);
+  }
+
   async cancelUpload(params: FileQuery): Promise<void> {
     const file = await this.prisma.file.findFirst({
       where: {
@@ -432,6 +510,53 @@ export class FilesService {
       name: file.name,
       status: file.status,
     };
+  }
+
+  private async getMoveDestinationFolder(params: {
+    destination: MoveFileDestination;
+    userId: string;
+  }) {
+    if (params.destination.type === "FOLDER") {
+      const folder = await this.prisma.folder.findFirst({
+        where: {
+          id: params.destination.id,
+          kind: FolderKind.NORMAL,
+          dataRoom: {
+            ownerId: params.userId,
+          },
+        },
+        select: {
+          dataRoomId: true,
+          id: true,
+        },
+      });
+
+      if (!folder) {
+        throw new NotFoundException();
+      }
+
+      return folder;
+    }
+
+    const rootFolder = await this.prisma.folder.findFirst({
+      where: {
+        dataRoomId: params.destination.id,
+        kind: FolderKind.ROOT,
+        dataRoom: {
+          ownerId: params.userId,
+        },
+      },
+      select: {
+        dataRoomId: true,
+        id: true,
+      },
+    });
+
+    if (!rootFolder) {
+      throw new NotFoundException();
+    }
+
+    return rootFolder;
   }
 
   private validateFileName(name: string): string {

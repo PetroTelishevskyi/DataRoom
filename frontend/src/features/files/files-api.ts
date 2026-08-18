@@ -23,6 +23,27 @@ type RenameFileResponse = {
   };
 };
 
+export type MoveFileDestination =
+  | {
+      type: "FOLDER";
+      id: string;
+    }
+  | {
+      type: "DATA_ROOM_ROOT";
+      id: string;
+    };
+
+type MoveFileParams = {
+  destination: MoveFileDestination;
+  fileId: string;
+};
+
+type MoveFileResponse = {
+  data: {
+    file: Pick<FileResourceItem, "id" | "name" | "status">;
+  };
+};
+
 export async function requestFileViewUrl(fileId: string) {
   const response = await apiRequest<FileViewUrlResponse>(
     `/files/${fileId}/view-url`,
@@ -40,6 +61,18 @@ export async function renameFile(params: RenameFileParams) {
     {
       body: JSON.stringify({ name: params.name }),
       method: "PATCH",
+    },
+  );
+
+  return response.data.file;
+}
+
+export async function moveFile(params: MoveFileParams) {
+  const response = await apiRequest<MoveFileResponse>(
+    `/files/${params.fileId}/move`,
+    {
+      body: JSON.stringify({ destination: params.destination }),
+      method: "POST",
     },
   );
 

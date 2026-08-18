@@ -35,6 +35,11 @@ type RenameFolderParams = {
   userId: string;
 };
 
+type DataRoomQuery = {
+  dataRoomId: string;
+  userId: string;
+};
+
 type DeletionPreview = {
   fileCount: number;
   folderCount: number;
@@ -74,6 +79,20 @@ type FileItem = {
 type BreadcrumbItem = {
   id: string;
   name: string;
+};
+
+export type FolderTreeNode = {
+  type: "FOLDER";
+  id: string;
+  name: string;
+  children: FolderTreeNode[];
+};
+
+export type FolderTreeRoot = {
+  type: "DATA_ROOM_ROOT";
+  id: string;
+  name: string;
+  children: FolderTreeNode[];
 };
 
 type FolderBreadcrumbNode = {
@@ -371,6 +390,97 @@ export class FoldersService {
       fileCount: Number(preview.fileCount),
       folderCount: Number(preview.folderCount),
       totalSizeBytes: Number(preview.totalSizeBytes),
+    };
+  }
+
+  async getFolderTree(params: DataRoomQuery): Promise<{ root: FolderTreeRoot }> {
+    const dataRoom = await this.prisma.dataRoom.findFirst({
+      where: {
+        id: params.dataRoomId,
+        ownerId: params.userId,
+      },
+      select: {
+        id: true,
+        name: true,
+        folders: {
+          where: {
+            kind: FolderKind.ROOT,
+          },
+          take: 2,
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    if (!dataRoom) {
+      throw new NotFoundException();
+    }
+
+    const [rootFolder] = dataRoom.folders;
+
+    if (dataRoom.folders.length !== 1 || !rootFolder) {
+      throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: "Data Room bootstrap invariant failed.",
+      });
+    }
+
+    const folders = await this.prisma.folder.findMany({
+      where: {
+        dataRoomId: dataRoom.id,
+        kind: FolderKind.NORMAL,
+      },
+      orderBy: [{ nameKey: "asc" }, { id: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        parentId: true,
+      },
+    });
+
+    const nodesById = new Map<string, FolderTreeNode>();
+
+    for (const folder of folders) {
+      nodesById.set(folder.id, {
+        type: "FOLDER",
+        id: folder.id,
+        name: folder.name,
+        children: [],
+      });
+    }
+
+    const root: FolderTreeRoot = {
+      type: "DATA_ROOM_ROOT",
+      id: dataRoom.id,
+      name: dataRoom.name,
+      children: [],
+    };
+
+    for (const folder of folders) {
+      const node = nodesById.get(folder.id);
+
+      if (!node) {
+        continue;
+      }
+
+      if (folder.parentId === rootFolder.id) {
+        root.children.push(node);
+        continue;
+      }
+
+      const parentNode = folder.parentId
+        ? nodesById.get(folder.parentId)
+        : undefined;
+
+      if (parentNode) {
+        parentNode.children.push(node);
+      }
+    }
+
+    return {
+      root,
     };
   }
 

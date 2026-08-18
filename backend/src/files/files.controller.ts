@@ -12,6 +12,7 @@ import {
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { InitiateUploadDto } from "./dto/initiate-upload.dto";
+import { MoveFileDto } from "./dto/move-file.dto";
 import { UpdateFileDto } from "./dto/update-file.dto";
 import { FilesService } from "./files.service";
 
@@ -116,6 +117,25 @@ export class FilesController {
     const file = await this.filesService.renameFile({
       fileId,
       name: updateFileDto.name,
+      userId,
+    });
+
+    return {
+      data: {
+        file,
+      },
+    };
+  }
+
+  @Post("files/:fileId/move")
+  async moveFile(
+    @CurrentUser("id") userId: string,
+    @Param("fileId") fileId: string,
+    @Body() moveFileDto: MoveFileDto,
+  ) {
+    const file = await this.filesService.moveFile({
+      destination: moveFileDto.destination,
+      fileId,
       userId,
     });
 

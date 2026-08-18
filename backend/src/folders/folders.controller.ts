@@ -69,6 +69,21 @@ export class FoldersController {
     };
   }
 
+  @Get("data-rooms/:dataRoomId/folder-tree")
+  async getFolderTree(
+    @CurrentUser("id") userId: string,
+    @Param("dataRoomId") dataRoomId: string,
+  ) {
+    const folderTree = await this.foldersService.getFolderTree({
+      dataRoomId,
+      userId,
+    });
+
+    return {
+      data: folderTree,
+    };
+  }
+
   @Post("folders/:folderId/folders")
   async createChildFolder(
     @CurrentUser("id") userId: string,

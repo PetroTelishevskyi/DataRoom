@@ -19,6 +19,7 @@ import { ResourceTable } from './resource-table'
 export function ResourceBrowser({
 	breadcrumbs,
 	capabilities,
+	dataRoomId,
 	getBreadcrumbHref,
 	getFolderHref,
 	hasResource,
@@ -28,6 +29,7 @@ export function ResourceBrowser({
 	onCreateFolder,
 	onDeleteFile,
 	onDeleteFolder,
+	onMoveFile,
 	onRenameFile,
 	onRenameFolder,
 	onUploadFiles,
@@ -128,10 +130,12 @@ export function ResourceBrowser({
 								canRenameFile={capabilities.canRenameFile}
 								canRenameFolder={capabilities.canRenameFolder}
 								canShare={capabilities.canShare}
+								dataRoomId={dataRoomId}
 								getFolderHref={getFolderHref}
 								items={items}
 								onDeleteFile={onDeleteFile}
 								onDeleteFolder={onDeleteFolder}
+								onMoveFile={onMoveFile}
 								onRenameFile={onRenameFile}
 								onRenameFolder={onRenameFolder}
 							/>

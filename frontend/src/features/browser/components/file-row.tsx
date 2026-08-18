@@ -1,6 +1,8 @@
 import type { FileResourceItem } from '@/features/data-rooms/data-room.types'
 import { DeleteFileDialog } from '@/features/files/components/delete-file-dialog'
+import { MoveFileDialog } from '@/features/files/components/move-file-dialog'
 import { RenameFileDialog } from '@/features/files/components/rename-file-dialog'
+import type { MoveFileDestination } from '@/features/files/files-api'
 import { cn } from '@/lib/utils'
 import { FileText } from 'lucide-react'
 import { useState } from 'react'
@@ -13,8 +15,13 @@ type FileRowProps = {
 	canMove: boolean
 	canRename: boolean
 	canShare: boolean
+	dataRoomId?: string
 	file: FileResourceItem
 	onDeleteFile?: (file: FileResourceItem) => Promise<void>
+	onMoveFile?: (
+		file: FileResourceItem,
+		destination: MoveFileDestination,
+	) => Promise<void>
 	onRenameFile?: (file: FileResourceItem, name: string) => Promise<void>
 }
 
@@ -40,14 +47,18 @@ export function FileRow({
 	canMove,
 	canRename,
 	canShare,
+	dataRoomId,
 	file,
 	onDeleteFile,
+	onMoveFile,
 	onRenameFile,
 }: FileRowProps) {
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+	const [isMoveOpen, setIsMoveOpen] = useState(false)
 	const [isRenameOpen, setIsRenameOpen] = useState(false)
 	const navigate = useNavigate()
 	const canView = file.status === 'READY'
+	const canMoveFile = canMove && Boolean(dataRoomId && onMoveFile)
 	const fileHref = `/files/${file.id}`
 	const fileRouteState = { fileName: file.name }
 
@@ -88,14 +99,14 @@ export function FileRow({
 			<div className='flex justify-end'>
 				<ResourceActionsMenu
 					canDelete={canDelete}
-					canMove={canMove}
+					canMove={canMoveFile}
 					canOpen={canView}
 					canRename={canRename}
 					canShare={canShare}
 					onDelete={
 						canDelete && onDeleteFile ? () => setIsDeleteOpen(true) : undefined
 					}
-					onMove={undefined}
+					onMove={canMoveFile ? () => setIsMoveOpen(true) : undefined}
 					onOpen={
 						canView
 							? () => navigate(fileHref, { state: fileRouteState })
@@ -115,6 +126,15 @@ export function FileRow({
 						onOpenChange={setIsRenameOpen}
 						onRenameFile={(name) => onRenameFile(file, name)}
 						open={isRenameOpen}
+					/>
+				) : null}
+				{canMoveFile && dataRoomId && onMoveFile ? (
+					<MoveFileDialog
+						dataRoomId={dataRoomId}
+						fileName={file.name}
+						onMoveFile={(destination) => onMoveFile(file, destination)}
+						onOpenChange={setIsMoveOpen}
+						open={isMoveOpen}
 					/>
 				) : null}
 				{canDelete && onDeleteFile ? (
