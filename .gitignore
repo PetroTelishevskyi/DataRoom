@@ -41,6 +41,10 @@ coverage/
 
 # TypeScript
 *.tsbuildinfo
+backend/src/**/*.js
+backend/src/**/*.js.map
+backend/src/**/*.d.ts
+backend/src/generated/prisma/
 
 # Prisma / local database artifacts
 *.db
