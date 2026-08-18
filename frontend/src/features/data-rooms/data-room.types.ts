@@ -29,6 +29,13 @@ export type BreadcrumbItem = {
   name: string;
 };
 
+export type FolderSummary = {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type PageInfo = {
   nextCursor: string | null;
   hasNextPage: boolean;
@@ -41,7 +48,7 @@ export type ResourceAccess = {
 };
 
 export type DataRoomContents = {
-  folder: null;
+  folder: FolderSummary | null;
   breadcrumbs: BreadcrumbItem[];
   items: ResourceItem[];
   pageInfo: PageInfo;

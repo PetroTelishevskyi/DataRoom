@@ -3,6 +3,7 @@ import { PublicOnlyRoute } from "@/features/auth/PublicOnlyRoute";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
 import { AuthenticatedAppLayout } from "@/layouts/AuthenticatedAppLayout/AuthenticatedAppLayout";
 import { AuthLayout } from "@/layouts/AuthLayout/AuthLayout";
+import { FolderPage } from "@/pages/FolderPage/FolderPage";
 import { HomePage } from "@/pages/HomePage/HomePage";
 import { LoginPage } from "@/pages/LoginPage/LoginPage";
 import { RegisterPage } from "@/pages/RegisterPage/RegisterPage";
@@ -35,6 +36,10 @@ export const router = createBrowserRouter([
           {
             path: "/",
             element: <HomePage />,
+          },
+          {
+            path: "/folders/:folderId",
+            element: <FolderPage />,
           },
         ],
       },

@@ -1,10 +1,26 @@
-import { Folder, LogOut, Users } from "lucide-react";
+import { Folder, FolderPlus, LogOut, Users } from "lucide-react";
 import { Outlet, NavLink } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { BrowserActionProvider } from "@/features/browser/browser-action-provider";
+import { useBrowserActions } from "@/features/browser/use-browser-actions";
 import { useAuth } from "@/features/auth/use-auth";
+import { CreateFolderDialog } from "@/features/folders/components/create-folder-dialog";
 import { cn } from "@/lib/utils";
 
-export function AuthenticatedAppLayout() {
+function AuthenticatedAppShell() {
   const { logout, user } = useAuth();
+  const { canCreateFolder, itemCount, onCreateFolder } = useBrowserActions();
+  const createFolderButton = (
+    <Button
+      className="mt-5 w-full justify-start"
+      disabled={!canCreateFolder}
+      size="sm"
+      type="button"
+    >
+      <FolderPlus aria-hidden className="h-4 w-4" />
+      Create folder
+    </Button>
+  );
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -12,6 +28,16 @@ export function AuthenticatedAppLayout() {
         <div className="px-2 text-lg font-semibold tracking-tight">
           Data Room
         </div>
+        {onCreateFolder ? (
+          <CreateFolderDialog
+            disabled={!canCreateFolder}
+            onCreateFolder={onCreateFolder}
+          >
+            {createFolderButton}
+          </CreateFolderDialog>
+        ) : (
+          createFolderButton
+        )}
 
         <nav className="mt-8 space-y-1">
           <NavLink
@@ -37,27 +63,33 @@ export function AuthenticatedAppLayout() {
           </button>
         </nav>
 
-        <div className="mt-auto border-t pt-4">
-          <div className="px-2">
-            <p className="truncate text-sm font-medium">
-              {user?.name ?? user?.email}
-            </p>
-            {user?.name ? (
-              <p className="truncate text-xs text-muted-foreground">
-                {user.email}
+        <div className="mt-auto">
+          <p className="px-2 pb-3 text-xs font-medium text-muted-foreground">
+            {itemCount === null ? null : `${itemCount} items`}
+          </p>
+
+          <div className="border-t pt-4">
+            <div className="px-2">
+              <p className="truncate text-sm font-medium">
+                {user?.name ?? user?.email}
               </p>
-            ) : null}
+              {user?.name ? (
+                <p className="truncate text-xs text-muted-foreground">
+                  {user.email}
+                </p>
+              ) : null}
+            </div>
+            <button
+              className="mt-3 flex h-9 w-full items-center gap-2 rounded-md px-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+              onClick={() => {
+                void logout();
+              }}
+              type="button"
+            >
+              <LogOut aria-hidden className="h-4 w-4" />
+              Sign out
+            </button>
           </div>
-          <button
-            className="mt-3 flex h-9 w-full items-center gap-2 rounded-md px-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-            onClick={() => {
-              void logout();
-            }}
-            type="button"
-          >
-            <LogOut aria-hidden className="h-4 w-4" />
-            Sign out
-          </button>
         </div>
       </aside>
 
@@ -81,5 +113,13 @@ export function AuthenticatedAppLayout() {
         </main>
       </div>
     </div>
+  );
+}
+
+export function AuthenticatedAppLayout() {
+  return (
+    <BrowserActionProvider>
+      <AuthenticatedAppShell />
+    </BrowserActionProvider>
   );
 }

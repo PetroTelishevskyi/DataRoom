@@ -4,6 +4,7 @@ import { configuration } from "./config/configuration";
 import { validateEnv } from "./config/env.validation";
 import { AuthModule } from "./auth/auth.module";
 import { DataRoomsModule } from "./data-rooms/data-rooms.module";
+import { FoldersModule } from "./folders/folders.module";
 import { HealthModule } from "./health/health.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { UsersModule } from "./users/users.module";
@@ -20,6 +21,7 @@ import { UsersModule } from "./users/users.module";
     UsersModule,
     AuthModule,
     DataRoomsModule,
+    FoldersModule,
   ],
 })
 export class AppModule {}

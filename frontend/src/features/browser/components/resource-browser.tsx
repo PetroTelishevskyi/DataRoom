@@ -1,39 +1,99 @@
+import { Fragment, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
+  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { useBrowserActions } from "@/features/browser/use-browser-actions";
 import type { ResourceBrowserProps } from "../browser.types";
 import { BrowserEmptyState } from "./browser-empty-state";
 import { BrowserErrorState } from "./browser-error-state";
 import { BrowserLoadingState } from "./browser-loading-state";
+import { ResourceTable } from "./resource-table";
 
 export function ResourceBrowser({
   breadcrumbs,
   capabilities,
+  getBreadcrumbHref,
+  getFolderHref,
   hasResource,
   isError,
   isLoading,
   items,
+  onCreateFolder,
+  rootHref,
   title,
 }: ResourceBrowserProps) {
-  const breadcrumbItems = breadcrumbs.length
-    ? breadcrumbs
-    : [{ id: "root", name: title }];
+  const { setBrowserActions } = useBrowserActions();
+
+  useEffect(() => {
+    setBrowserActions({
+      canCreateFolder: capabilities.canCreateFolder && hasResource && !isError,
+      itemCount: hasResource && !isError ? items.length : null,
+      onCreateFolder,
+    });
+
+    return () => {
+      setBrowserActions({
+        canCreateFolder: false,
+        itemCount: null,
+      });
+    };
+  }, [
+    capabilities.canCreateFolder,
+    hasResource,
+    isError,
+    items.length,
+    onCreateFolder,
+    setBrowserActions,
+  ]);
 
   return (
     <section className="flex min-h-full w-full flex-col">
       <header className="px-6 pt-4 lg:px-8">
         <Breadcrumb>
           <BreadcrumbList className="overflow-x-auto whitespace-nowrap">
-            {breadcrumbItems.map((breadcrumb) => (
-              <BreadcrumbItem key={breadcrumb.id}>
-                <BreadcrumbPage className="truncate">
-                  {breadcrumb.name}
-                </BreadcrumbPage>
-              </BreadcrumbItem>
-            ))}
+            <BreadcrumbItem>
+              {breadcrumbs.length ? (
+                <BreadcrumbLink asChild>
+                  <Link className="truncate" to={rootHref}>
+                    {title}
+                  </Link>
+                </BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage className="truncate">{title}</BreadcrumbPage>
+              )}
+            </BreadcrumbItem>
+
+            {breadcrumbs.map((breadcrumb, index) => {
+              const isLast = index === breadcrumbs.length - 1;
+
+              return (
+                <Fragment key={breadcrumb.id}>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    {isLast ? (
+                      <BreadcrumbPage className="truncate">
+                        {breadcrumb.name}
+                      </BreadcrumbPage>
+                    ) : (
+                      <BreadcrumbLink asChild>
+                        <Link
+                          className="truncate"
+                          to={getBreadcrumbHref(breadcrumb)}
+                        >
+                          {breadcrumb.name}
+                        </Link>
+                      </BreadcrumbLink>
+                    )}
+                  </BreadcrumbItem>
+                </Fragment>
+              );
+            })}
           </BreadcrumbList>
         </Breadcrumb>
         <div className="mt-4 border-b" />
@@ -46,34 +106,13 @@ export function ResourceBrowser({
 
         {!isLoading && !isError && hasResource ? (
           <div className="flex min-h-0 flex-1 flex-col">
-            <div className="flex items-center justify-between py-1">
-              <p className="text-sm text-muted-foreground">
-                {items.length ? `${items.length} items` : null}
-              </p>
-            </div>
-
             {items.length ? (
-              <div className="overflow-hidden rounded-lg border">
-                <div className="grid grid-cols-[1fr_auto] border-b bg-muted/30 px-4 py-3 text-xs font-medium uppercase text-muted-foreground">
-                  <span>Name</span>
-                  <span>Updated</span>
-                </div>
-                {items.map((item) => (
-                  <div
-                    className="grid grid-cols-[1fr_auto] items-center gap-4 border-b px-4 py-3 last:border-b-0"
-                    key={`${item.type}-${item.id}`}
-                  >
-                    <span className="truncate text-sm font-medium">
-                      {item.name}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(item.updatedAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <ResourceTable getFolderHref={getFolderHref} items={items} />
             ) : (
-              <BrowserEmptyState capabilities={capabilities} />
+              <BrowserEmptyState
+                capabilities={capabilities}
+                onCreateFolder={onCreateFolder}
+              />
             )}
           </div>
         ) : null}
