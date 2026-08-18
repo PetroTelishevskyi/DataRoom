@@ -3,6 +3,7 @@ import { PublicOnlyRoute } from "@/features/auth/PublicOnlyRoute";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
 import { AuthenticatedAppLayout } from "@/layouts/AuthenticatedAppLayout/AuthenticatedAppLayout";
 import { AuthLayout } from "@/layouts/AuthLayout/AuthLayout";
+import { FileViewerPage } from "@/pages/FileViewerPage/FileViewerPage";
 import { FolderPage } from "@/pages/FolderPage/FolderPage";
 import { HomePage } from "@/pages/HomePage/HomePage";
 import { LoginPage } from "@/pages/LoginPage/LoginPage";
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
             element: <FolderPage />,
           },
         ],
+      },
+      {
+        path: "/files/:fileId",
+        element: <FileViewerPage />,
       },
     ],
   },

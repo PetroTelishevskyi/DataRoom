@@ -88,6 +88,23 @@ export class FilesController {
     };
   }
 
+  @Post("files/:fileId/view-url")
+  async requestViewUrl(
+    @CurrentUser("id") userId: string,
+    @Param("fileId") fileId: string,
+  ) {
+    const viewUrl = await this.filesService.requestViewUrl({
+      fileId,
+      userId,
+    });
+
+    return {
+      data: {
+        viewUrl,
+      },
+    };
+  }
+
   @Delete("files/:fileId/upload")
   @HttpCode(HttpStatus.NO_CONTENT)
   async cancelUpload(

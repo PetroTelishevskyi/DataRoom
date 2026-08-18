@@ -222,6 +222,29 @@ export class FilesService {
     return this.toFileUploadSummary(updatedFile);
   }
 
+  async requestViewUrl(params: FileQuery) {
+    const file = await this.prisma.file.findFirst({
+      where: {
+        id: params.fileId,
+        status: FileStatus.READY,
+        dataRoom: {
+          ownerId: params.userId,
+        },
+      },
+      select: {
+        storageKey: true,
+      },
+    });
+
+    if (!file) {
+      throw new NotFoundException();
+    }
+
+    return this.storageService.createReadUrl({
+      key: file.storageKey,
+    });
+  }
+
   async cancelUpload(params: FileQuery): Promise<void> {
     const file = await this.prisma.file.findFirst({
       where: {
