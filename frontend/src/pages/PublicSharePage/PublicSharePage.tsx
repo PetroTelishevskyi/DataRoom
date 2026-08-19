@@ -1,5 +1,5 @@
-import { FileText, RefreshCcw } from "lucide-react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { ArrowLeft, FileText, RefreshCcw } from "lucide-react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -76,20 +76,35 @@ function PublicFileViewer({
   publicShare?: PublicFileShare;
   token: string;
 }) {
+  const navigate = useNavigate();
   const resolvedFileId = fileId ?? publicShare?.resource.id ?? "";
   const resolvedFileName = publicShare?.resource.name ?? fileName;
   const viewUrlQuery = usePublicFileViewUrl(token, resolvedFileId);
 
   return (
-    <section className="flex h-full min-h-0 flex-col px-6 py-6">
-      <div className="mb-4 flex min-w-0 shrink-0 items-center gap-3">
-        <FileText aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
-        <h1 className="truncate text-lg font-semibold tracking-tight">
-          {resolvedFileName}
-        </h1>
-      </div>
+    <section className="flex h-screen w-screen flex-col overflow-hidden bg-background">
+      <header className="flex h-14 shrink-0 items-center gap-4 border-b px-4">
+        <Button
+          className="shrink-0 px-0 text-muted-foreground hover:text-foreground"
+          onClick={() => navigate(-1)}
+          type="button"
+          variant="link"
+        >
+          <ArrowLeft aria-hidden className="h-4 w-4" />
+          Back
+        </Button>
+        <div className="flex min-w-0 items-center gap-3 border-l pl-4">
+          <FileText
+            aria-hidden
+            className="h-4 w-4 shrink-0 text-muted-foreground"
+          />
+          <h1 className="truncate text-sm font-medium text-foreground">
+            {resolvedFileName}
+          </h1>
+        </div>
+      </header>
 
-      <div className="min-h-0 flex-1 overflow-hidden rounded-lg border bg-muted/30">
+      <div className="h-[calc(100vh-3.5rem)] min-h-0 overflow-hidden bg-muted/30">
         {viewUrlQuery.isLoading ? (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             Loading PDF...

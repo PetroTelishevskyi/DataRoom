@@ -30,8 +30,8 @@ export function PublicFilePage() {
   );
 
   return (
-    <section className="flex h-full min-h-0 flex-col px-6 py-6">
-      <header className="mb-4 flex min-w-0 shrink-0 items-center gap-4">
+    <section className="flex h-screen w-screen flex-col overflow-hidden bg-background">
+      <header className="flex h-14 shrink-0 items-center gap-4 border-b px-4">
         <Button
           className="shrink-0 px-0 text-muted-foreground hover:text-foreground"
           onClick={() => navigate(-1)}
@@ -47,7 +47,7 @@ export function PublicFilePage() {
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-hidden rounded-lg border bg-muted/30">
+      <div className="h-[calc(100vh-3.5rem)] min-h-0 overflow-hidden bg-muted/30">
         {viewUrlQuery.isLoading ? (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             Loading PDF...
