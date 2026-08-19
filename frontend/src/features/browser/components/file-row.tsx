@@ -3,6 +3,7 @@ import { DeleteFileDialog } from '@/features/files/components/delete-file-dialog
 import { MoveFileDialog } from '@/features/files/components/move-file-dialog'
 import { RenameFileDialog } from '@/features/files/components/rename-file-dialog'
 import type { MoveFileDestination } from '@/features/files/files-api'
+import { ShareDialog } from '@/features/sharing/components/share-dialog'
 import { cn } from '@/lib/utils'
 import { FileText } from 'lucide-react'
 import { useState } from 'react'
@@ -56,6 +57,7 @@ export function FileRow({
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 	const [isMoveOpen, setIsMoveOpen] = useState(false)
 	const [isRenameOpen, setIsRenameOpen] = useState(false)
+	const [isShareOpen, setIsShareOpen] = useState(false)
 	const navigate = useNavigate()
 	const canView = file.status === 'READY'
 	const canMoveFile = canMove && Boolean(dataRoomId && onMoveFile)
@@ -115,11 +117,22 @@ export function FileRow({
 					onRename={
 						canRename && onRenameFile ? () => setIsRenameOpen(true) : undefined
 					}
-					onShare={undefined}
+					onShare={canShare ? () => setIsShareOpen(true) : undefined}
 					showMove
 					showOpen
 					showShare
 				/>
+				{canShare ? (
+					<ShareDialog
+						onOpenChange={setIsShareOpen}
+						open={isShareOpen}
+						resource={{
+							id: file.id,
+							name: file.name,
+							type: 'FILE',
+						}}
+					/>
+				) : null}
 				{canRename && onRenameFile ? (
 					<RenameFileDialog
 						currentName={file.name}

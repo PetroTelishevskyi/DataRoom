@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { toast } from "@/components/ui/toast/use-toast";
+import { getBrowserCapabilities } from "@/features/browser/browser-capabilities";
 import { ResourceBrowser } from "@/features/browser/components/resource-browser";
 import type {
   FileResourceItem,
@@ -54,6 +55,7 @@ export function FolderPage() {
   const isError = dataRoomsQuery.isError || contentsQuery.isError;
   const dataRoom = dataRoomsQuery.data?.[0] ?? null;
   const contents = contentsQuery.data;
+  const accessRole = contents?.access.role ?? "OWNER";
   const createFolderMutation = useMutation({
     mutationFn: (name: string) =>
       createChildFolder({ name, parentFolderId: folderId }),
@@ -264,18 +266,9 @@ export function FolderPage() {
 
   return (
     <ResourceBrowser
-      accessRole={contents?.access.role ?? "OWNER"}
+      accessRole={accessRole}
       breadcrumbs={contents?.breadcrumbs ?? []}
-      capabilities={{
-        canCreateFolder: true,
-        canDeleteFile: true,
-        canDeleteFolder: true,
-        canMoveFile: true,
-        canRenameFile: true,
-        canRenameFolder: true,
-        canShare: true,
-        canUpload: true,
-      }}
+      capabilities={getBrowserCapabilities(accessRole)}
       dataRoomId={dataRoom?.id}
       getBreadcrumbHref={(breadcrumb) => `/folders/${breadcrumb.id}`}
       getFolderHref={(folder) => `/folders/${folder.id}`}

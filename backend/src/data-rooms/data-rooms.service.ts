@@ -96,7 +96,7 @@ export class DataRoomsService {
   }
 
   async getRootContents(params: DataRoomQuery) {
-    await this.authorizationService.assertOwnsDataRoom(
+    const access = await this.authorizationService.resolveDataRoomReadAccess(
       params.userId,
       params.dataRoomId,
     );
@@ -189,7 +189,7 @@ export class DataRoomsService {
         hasNextPage: false,
       },
       access: {
-        role: "OWNER",
+        role: access.role,
       },
     };
   }

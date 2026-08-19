@@ -71,6 +71,7 @@ export function ResourceTable({
 							<FolderCard
 								canDelete={canDeleteFolder}
 								canRename={canRenameFolder}
+								canShare={canShare}
 								folder={folder}
 								href={getFolderHref(folder)}
 								key={`${folder.type}-${folder.id}`}

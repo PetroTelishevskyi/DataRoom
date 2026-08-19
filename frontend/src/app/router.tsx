@@ -3,11 +3,13 @@ import { PublicOnlyRoute } from "@/features/auth/PublicOnlyRoute";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
 import { AuthenticatedAppLayout } from "@/layouts/AuthenticatedAppLayout/AuthenticatedAppLayout";
 import { AuthLayout } from "@/layouts/AuthLayout/AuthLayout";
+import { DataRoomPage } from "@/pages/DataRoomPage/DataRoomPage";
 import { FileViewerPage } from "@/pages/FileViewerPage/FileViewerPage";
 import { FolderPage } from "@/pages/FolderPage/FolderPage";
 import { HomePage } from "@/pages/HomePage/HomePage";
 import { LoginPage } from "@/pages/LoginPage/LoginPage";
 import { RegisterPage } from "@/pages/RegisterPage/RegisterPage";
+import { SharedWithMePage } from "@/pages/SharedWithMePage/SharedWithMePage";
 
 export const router = createBrowserRouter([
   {
@@ -39,8 +41,16 @@ export const router = createBrowserRouter([
             element: <HomePage />,
           },
           {
+            path: "/data-rooms/:dataRoomId",
+            element: <DataRoomPage />,
+          },
+          {
             path: "/folders/:folderId",
             element: <FolderPage />,
+          },
+          {
+            path: "/shared-with-me",
+            element: <SharedWithMePage />,
           },
         ],
       },

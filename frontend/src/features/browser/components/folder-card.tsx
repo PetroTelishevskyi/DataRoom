@@ -1,6 +1,7 @@
 import type { FolderResourceItem } from '@/features/data-rooms/data-room.types'
 import { DeleteFolderDialog } from '@/features/folders/components/delete-folder-dialog'
 import { RenameFolderDialog } from '@/features/folders/components/rename-folder-dialog'
+import { ShareDialog } from '@/features/sharing/components/share-dialog'
 import { Folder } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -9,6 +10,7 @@ import { ResourceActionsMenu } from './resource-actions-menu'
 type FolderCardProps = {
 	canDelete: boolean
 	canRename: boolean
+	canShare: boolean
 	folder: FolderResourceItem
 	href: string
 	onDeleteFolder?: (folder: FolderResourceItem) => Promise<void>
@@ -18,6 +20,7 @@ type FolderCardProps = {
 export function FolderCard({
 	canDelete,
 	canRename,
+	canShare,
 	folder,
 	href,
 	onDeleteFolder,
@@ -25,6 +28,7 @@ export function FolderCard({
 }: FolderCardProps) {
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 	const [isRenameOpen, setIsRenameOpen] = useState(false)
+	const [isShareOpen, setIsShareOpen] = useState(false)
 
 	return (
 		<div className='flex min-w-0 items-start justify-between gap-3 rounded-lg border bg-white p-4 shadow-sm transition-colors hover:bg-muted/30'>
@@ -59,7 +63,20 @@ export function FolderCard({
 							? () => setIsRenameOpen(true)
 							: undefined
 					}
+					onShare={canShare ? () => setIsShareOpen(true) : undefined}
+					showShare
 				/>
+				{canShare ? (
+					<ShareDialog
+						onOpenChange={setIsShareOpen}
+						open={isShareOpen}
+						resource={{
+							id: folder.id,
+							name: folder.name,
+							type: 'FOLDER',
+						}}
+					/>
+				) : null}
 				{canRename && onRenameFolder ? (
 					<RenameFolderDialog
 						currentName={folder.name}

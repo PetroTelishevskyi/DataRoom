@@ -20,7 +20,7 @@ function AuthenticatedAppShell() {
 	const createFolderButton = (
 		<Button
 			className='mt-5 w-full justify-start'
-			disabled={!canCreateFolder}
+			disabled={!canCreateFolder || !onCreateFolder}
 			size='sm'
 			type='button'
 		>
@@ -47,7 +47,7 @@ function AuthenticatedAppShell() {
 				)}
 				<UploadFileButton
 					className='mt-2 w-full justify-start bg-white hover:bg-muted/30'
-					disabled={!canUpload}
+					disabled={!canUpload || !onUploadFiles}
 					onUploadFiles={onUploadFiles}
 					size='sm'
 					variant='outline'
@@ -67,14 +67,18 @@ function AuthenticatedAppShell() {
 						My Data Room
 					</NavLink>
 
-					<button
-						className='flex h-10 w-full items-center gap-3 rounded-md px-3 text-left text-sm font-medium text-muted-foreground'
-						disabled
-						type='button'
+					<NavLink
+						className={({ isActive }) =>
+							cn(
+								'flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground',
+								isActive && 'bg-background text-foreground shadow-sm',
+							)
+						}
+						to='/shared-with-me'
 					>
 						<Users aria-hidden className='h-4 w-4' />
 						Shared with me
-					</button>
+					</NavLink>
 				</nav>
 
 				<div className='mt-auto'>

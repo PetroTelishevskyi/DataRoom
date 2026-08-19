@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getBrowserCapabilities } from "@/features/browser/browser-capabilities";
 import { ResourceBrowser } from "@/features/browser/components/resource-browser";
 import {
   dataRoomQueryKeys,
@@ -51,6 +52,7 @@ export function HomePage() {
     dataRoomsQuery.isLoading || (Boolean(dataRoom) && contentsQuery.isLoading);
   const isError = dataRoomsQuery.isError || contentsQuery.isError;
   const items = contentsQuery.data?.items ?? [];
+  const accessRole = contentsQuery.data?.access.role ?? "OWNER";
   const breadcrumbTitle = dataRoom?.name ?? "Data Room";
   const createFolderMutation = useMutation({
     mutationFn: (name: string) =>
@@ -264,18 +266,9 @@ export function HomePage() {
 
   return (
     <ResourceBrowser
-      accessRole={contentsQuery.data?.access.role ?? "OWNER"}
+      accessRole={accessRole}
       breadcrumbs={contentsQuery.data?.breadcrumbs ?? []}
-      capabilities={{
-        canCreateFolder: true,
-        canDeleteFile: true,
-        canDeleteFolder: true,
-        canMoveFile: true,
-        canRenameFile: true,
-        canRenameFolder: true,
-        canShare: true,
-        canUpload: true,
-      }}
+      capabilities={getBrowserCapabilities(accessRole)}
       dataRoomId={dataRoom?.id}
       getBreadcrumbHref={(breadcrumb) => `/folders/${breadcrumb.id}`}
       getFolderHref={(folder) => `/folders/${folder.id}`}
