@@ -1,15 +1,17 @@
 {
-	"services": {
+	"experimentalServices": {
 		"frontend": {
 			"root": "frontend",
 			"framework": "vite"
 		},
+
 		"backend": {
 			"root": "backend",
 			"runtime": "node",
 			"entrypoint": "src/main.ts"
 		}
 	},
+
 	"rewrites": [
 		{
 			"source": "/api/(.*)",
