@@ -47,6 +47,11 @@ export type PublicLinkShareSummary = {
 
 export type ResourceShareSummary = ShareSummary | PublicLinkShareSummary;
 
+export type RevokedShareSummary = {
+  id: string;
+  revokedAt: string;
+};
+
 export type SharedWithMeResource =
   | {
       type: "DATA_ROOM";

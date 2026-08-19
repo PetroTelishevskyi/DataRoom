@@ -51,7 +51,7 @@ export function PeopleWithAccess({ resource }: PeopleWithAccessProps) {
           {sharesQuery.data
             .filter((share) => share.type === "USER")
             .map((share) => (
-              <UserShareRow key={share.id} share={share} />
+              <UserShareRow key={share.id} resource={resource} share={share} />
             ))}
         </div>
       ) : null}

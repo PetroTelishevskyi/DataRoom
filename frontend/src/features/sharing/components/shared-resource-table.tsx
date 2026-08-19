@@ -201,7 +201,7 @@ function SharedResourceIcon() {
 
 function SharedResourceEmptyState() {
   return (
-    <Empty className="min-h-[320px] rounded-lg border">
+    <Empty className="min-h-0 flex-1">
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <SharedResourceIcon />
@@ -217,7 +217,7 @@ function SharedResourceEmptyState() {
 
 function SharedResourceErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <Empty className="min-h-[320px] rounded-lg border">
+    <Empty className="min-h-0 flex-1">
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <SharedResourceIcon />

@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { CreateShareDto } from "./dto/create-share.dto";
@@ -53,6 +62,23 @@ export class SharesController {
     return {
       data: {
         shares,
+      },
+    };
+  }
+
+  @Delete(":shareId")
+  async revokeShare(
+    @CurrentUser("id") userId: string,
+    @Param("shareId") shareId: string,
+  ) {
+    const revokedShare = await this.sharesService.revokeShare({
+      shareId,
+      userId,
+    });
+
+    return {
+      data: {
+        share: revokedShare,
       },
     };
   }

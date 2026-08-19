@@ -3,6 +3,7 @@ import type {
   CreatePublicShareInput,
   CreateUserShareInput,
   ResourceShareSummary,
+  RevokedShareSummary,
   ShareResource,
   ShareSummary,
   SharedWithMeItem,
@@ -23,6 +24,12 @@ type SharesResponse = {
 type SharedWithMeResponse = {
   data: {
     shares: SharedWithMeItem[];
+  };
+};
+
+type RevokeShareResponse = {
+  data: {
+    share: RevokedShareSummary;
   };
 };
 
@@ -62,4 +69,15 @@ export async function getSharedWithMe() {
     await apiRequest<SharedWithMeResponse>("/shared-with-me");
 
   return response.data.shares;
+}
+
+export async function revokeShare(shareId: string) {
+  const response = await apiRequest<RevokeShareResponse>(
+    `/shares/${shareId}`,
+    {
+      method: "DELETE",
+    },
+  );
+
+  return response.data.share;
 }

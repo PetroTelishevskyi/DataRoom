@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast/use-toast";
 import { useCreatePublicShare } from "../hooks/use-create-public-share";
 import { useResourceShares } from "../hooks/use-resource-shares";
+import { useRevokeShare } from "../hooks/use-revoke-share";
 import type { ShareResource } from "../share.types";
 
 type PublicLinkSectionProps = {
@@ -16,6 +17,7 @@ export function PublicLinkSection({ resource }: PublicLinkSectionProps) {
   const [didCopy, setDidCopy] = useState(false);
   const sharesQuery = useResourceShares(resource);
   const createPublicShareMutation = useCreatePublicShare();
+  const revokeShareMutation = useRevokeShare();
   const publicLinkShare = sharesQuery.data?.find(
     (share) => share.type === "PUBLIC_LINK",
   );
@@ -56,6 +58,28 @@ export function PublicLinkSection({ resource }: PublicLinkSectionProps) {
       });
     } catch {
       setCopyError("Unable to copy link.");
+    }
+  }
+
+  async function handleDisablePublicLink() {
+    if (!publicLinkShare) {
+      return;
+    }
+
+    setCopyError(null);
+
+    try {
+      await revokeShareMutation.mutateAsync({
+        resource,
+        shareId: publicLinkShare.id,
+      });
+      setDidCopy(false);
+      toast({
+        title: "Link disabled",
+        variant: "success",
+      });
+    } catch {
+      setCopyError("Unable to disable link.");
     }
   }
 
@@ -102,13 +126,28 @@ export function PublicLinkSection({ resource }: PublicLinkSectionProps) {
       </p>
       <div className="flex gap-2">
         <Input readOnly value={publicUrl} />
-        <Button onClick={() => void handleCopyPublicLink()} type="button">
+        <Button
+          disabled={revokeShareMutation.isPending}
+          onClick={() => void handleCopyPublicLink()}
+          type="button"
+        >
           {didCopy ? (
             <Check aria-hidden className="h-4 w-4" />
           ) : (
             <Copy aria-hidden className="h-4 w-4" />
           )}
           Copy
+        </Button>
+        <Button
+          disabled={revokeShareMutation.isPending}
+          onClick={() => void handleDisablePublicLink()}
+          type="button"
+          variant="outline"
+        >
+          {revokeShareMutation.isPending ? (
+            <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+          ) : null}
+          Disable link
         </Button>
       </div>
       {copyError ? <p className="text-xs text-destructive">{copyError}</p> : null}

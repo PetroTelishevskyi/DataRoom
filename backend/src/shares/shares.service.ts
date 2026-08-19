@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { HttpStatus, Injectable } from "@nestjs/common";
+import { HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { AuthorizationService } from "../authorization/authorization.service";
 import { AppError } from "../common/errors/app-error";
 import { ShareRole, ShareType } from "../generated/prisma/enums";
@@ -33,6 +33,16 @@ type CreatePublicLinkShareParams = {
 type ListResourceSharesParams = {
   resource: ShareResource;
   userId: string;
+};
+
+type RevokeShareParams = {
+  shareId: string;
+  userId: string;
+};
+
+type RevokedShareSummary = {
+  id: string;
+  revokedAt: Date;
 };
 
 @Injectable()
@@ -181,6 +191,59 @@ export class SharesService {
     return shares.map(toSharedWithMeItem);
   }
 
+  async revokeShare(
+    params: RevokeShareParams,
+  ): Promise<RevokedShareSummary> {
+    const share = await this.prisma.share.findFirst({
+      where: {
+        id: params.shareId,
+        revokedAt: null,
+      },
+      select: {
+        dataRoomId: true,
+        fileId: true,
+        folderId: true,
+        id: true,
+      },
+    });
+
+    if (!share) {
+      throw new NotFoundException();
+    }
+
+    await this.assertOwnsResource(
+      params.userId,
+      this.toShareResource(share),
+    );
+
+    const revokedAt = new Date();
+    const revokedShare = await this.prisma.share.update({
+      data: {
+        revokedAt,
+      },
+      select: {
+        id: true,
+        revokedAt: true,
+      },
+      where: {
+        id: share.id,
+      },
+    });
+
+    if (!revokedShare.revokedAt) {
+      throw new AppError(
+        "SHARE_REVOKE_FAILED",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "Share revoke failed.",
+      );
+    }
+
+    return {
+      id: revokedShare.id,
+      revokedAt: revokedShare.revokedAt,
+    };
+  }
+
   private async assertOwnsResource(
     userId: string,
     resource: ShareResource,
@@ -268,6 +331,35 @@ export class SharesService {
     return {
       fileId: resource.id,
     };
+  }
+
+  private toShareResource(share: {
+    dataRoomId: string | null;
+    fileId: string | null;
+    folderId: string | null;
+  }): ShareResource {
+    if (share.dataRoomId) {
+      return {
+        type: "DATA_ROOM",
+        id: share.dataRoomId,
+      };
+    }
+
+    if (share.folderId) {
+      return {
+        type: "FOLDER",
+        id: share.folderId,
+      };
+    }
+
+    if (share.fileId) {
+      return {
+        type: "FILE",
+        id: share.fileId,
+      };
+    }
+
+    throw new NotFoundException();
   }
 
   private shareSummarySelect() {
