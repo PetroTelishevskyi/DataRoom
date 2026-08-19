@@ -29,18 +29,24 @@ export function FolderCard({
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 	const [isRenameOpen, setIsRenameOpen] = useState(false)
 	const [isShareOpen, setIsShareOpen] = useState(false)
+	const shouldShowActions = canDelete || canRename || canShare
 
 	return (
 		<div className='flex min-w-0 items-start justify-between gap-3 rounded-lg border bg-white p-4 shadow-sm transition-colors hover:bg-muted/30'>
 			<Link
-				className='flex min-w-0 flex-1 items-start gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+				className='group flex min-w-0 flex-1 items-start gap-3 rounded-sm text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
 				to={href}
 			>
 				<div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-muted/30'>
-					<Folder aria-hidden className='h-4 w-4 text-muted-foreground' />
+					<Folder
+						aria-hidden
+						className='h-4 w-4 text-primary'
+					/>
 				</div>
 				<div className='min-w-0'>
-					<p className='truncate text-base font-medium'>{folder.name}</p>
+					<p className='truncate text-base font-medium underline-offset-4 group-hover:underline'>
+						{folder.name}
+					</p>
 					<p className='mt-1 text-xs text-muted-foreground'>
 						{new Intl.DateTimeFormat('en-GB', {
 							day: '2-digit',
@@ -52,20 +58,22 @@ export function FolderCard({
 			</Link>
 
 			<div className='flex shrink-0 items-start'>
-				<ResourceActionsMenu
-					onDelete={
-						canDelete && onDeleteFolder
-							? () => setIsDeleteOpen(true)
-							: undefined
-					}
-					onRename={
-						canRename && onRenameFolder
-							? () => setIsRenameOpen(true)
-							: undefined
-					}
-					onShare={canShare ? () => setIsShareOpen(true) : undefined}
-					showShare
-				/>
+				{shouldShowActions ? (
+					<ResourceActionsMenu
+						onDelete={
+							canDelete && onDeleteFolder
+								? () => setIsDeleteOpen(true)
+								: undefined
+						}
+						onRename={
+							canRename && onRenameFolder
+								? () => setIsRenameOpen(true)
+								: undefined
+						}
+						onShare={canShare ? () => setIsShareOpen(true) : undefined}
+						showShare
+					/>
+				) : null}
 				{canShare ? (
 					<ShareDialog
 						onOpenChange={setIsShareOpen}

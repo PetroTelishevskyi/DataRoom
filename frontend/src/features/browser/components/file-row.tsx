@@ -18,6 +18,8 @@ type FileRowProps = {
 	canShare: boolean
 	dataRoomId?: string
 	file: FileResourceItem
+	getFileHref?: (file: FileResourceItem) => string
+	getFileState?: (file: FileResourceItem) => unknown
 	onDeleteFile?: (file: FileResourceItem) => Promise<void>
 	onMoveFile?: (
 		file: FileResourceItem,
@@ -50,6 +52,8 @@ export function FileRow({
 	canShare,
 	dataRoomId,
 	file,
+	getFileHref,
+	getFileState,
 	onDeleteFile,
 	onMoveFile,
 	onRenameFile,
@@ -61,8 +65,9 @@ export function FileRow({
 	const navigate = useNavigate()
 	const canView = file.status === 'READY'
 	const canMoveFile = canMove && Boolean(dataRoomId && onMoveFile)
-	const fileHref = `/files/${file.id}`
-	const fileRouteState = { fileName: file.name }
+	const fileHref = getFileHref?.(file) ?? `/files/${file.id}`
+	const fileRouteState = getFileState?.(file) ?? { fileName: file.name }
+	const shouldShowActions = canDelete || canMoveFile || canRename || canShare
 
 	return (
 		<div
@@ -73,15 +78,17 @@ export function FileRow({
 		>
 			{canView ? (
 				<Link
-					className='flex min-w-0 items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+					className='group flex min-w-0 items-center gap-3 rounded-sm text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
 					state={fileRouteState}
 					to={fileHref}
 				>
 					<FileText
 						aria-hidden
-						className='h-4 w-4 shrink-0 text-muted-foreground'
+						className='h-4 w-4 shrink-0 text-primary'
 					/>
-					<span className='truncate text-sm font-medium'>{file.name}</span>
+					<span className='truncate text-sm font-medium underline-offset-4 group-hover:underline'>
+						{file.name}
+					</span>
 				</Link>
 			) : (
 				<div className='flex min-w-0 items-center gap-3'>
@@ -99,29 +106,33 @@ export function FileRow({
 				{new Date(file.updatedAt).toLocaleDateString()}
 			</span>
 			<div className='flex justify-end'>
-				<ResourceActionsMenu
-					canDelete={canDelete}
-					canMove={canMoveFile}
-					canOpen={canView}
-					canRename={canRename}
-					canShare={canShare}
-					onDelete={
-						canDelete && onDeleteFile ? () => setIsDeleteOpen(true) : undefined
-					}
-					onMove={canMoveFile ? () => setIsMoveOpen(true) : undefined}
-					onOpen={
-						canView
-							? () => navigate(fileHref, { state: fileRouteState })
-							: undefined
-					}
-					onRename={
-						canRename && onRenameFile ? () => setIsRenameOpen(true) : undefined
-					}
-					onShare={canShare ? () => setIsShareOpen(true) : undefined}
-					showMove
-					showOpen
-					showShare
-				/>
+				{shouldShowActions ? (
+					<ResourceActionsMenu
+						canDelete={canDelete}
+						canMove={canMoveFile}
+						canOpen={canView}
+						canRename={canRename}
+						canShare={canShare}
+						onDelete={
+							canDelete && onDeleteFile ? () => setIsDeleteOpen(true) : undefined
+						}
+						onMove={canMoveFile ? () => setIsMoveOpen(true) : undefined}
+						onOpen={
+							canView
+								? () => navigate(fileHref, { state: fileRouteState })
+								: undefined
+						}
+						onRename={
+							canRename && onRenameFile
+								? () => setIsRenameOpen(true)
+								: undefined
+						}
+						onShare={canShare ? () => setIsShareOpen(true) : undefined}
+						showMove
+						showOpen
+						showShare
+					/>
+				) : null}
 				{canShare ? (
 					<ShareDialog
 						onOpenChange={setIsShareOpen}

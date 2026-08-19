@@ -21,6 +21,8 @@ export function ResourceBrowser({
 	capabilities,
 	dataRoomId,
 	getBreadcrumbHref,
+	getFileHref,
+	getFileState,
 	getFolderHref,
 	hasResource,
 	isError,
@@ -131,6 +133,8 @@ export function ResourceBrowser({
 								canRenameFolder={capabilities.canRenameFolder}
 								canShare={capabilities.canShare}
 								dataRoomId={dataRoomId}
+								getFileHref={getFileHref}
+								getFileState={getFileState}
 								getFolderHref={getFolderHref}
 								items={items}
 								onDeleteFile={onDeleteFile}

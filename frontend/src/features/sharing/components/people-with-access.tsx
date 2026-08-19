@@ -46,15 +46,18 @@ export function PeopleWithAccess({ resource }: PeopleWithAccessProps) {
         </div>
       ) : null}
 
-      {sharesQuery.data?.length ? (
+      {sharesQuery.data?.some((share) => share.type === "USER") ? (
         <div className="grid gap-2">
-          {sharesQuery.data.map((share) => (
-            <UserShareRow key={share.id} share={share} />
-          ))}
+          {sharesQuery.data
+            .filter((share) => share.type === "USER")
+            .map((share) => (
+              <UserShareRow key={share.id} share={share} />
+            ))}
         </div>
       ) : null}
 
-      {sharesQuery.data && sharesQuery.data.length === 0 ? (
+      {sharesQuery.data &&
+      !sharesQuery.data.some((share) => share.type === "USER") ? (
         <div className="flex items-center gap-3 rounded-md border border-dashed p-3 text-sm text-muted-foreground">
           <Users aria-hidden className="h-4 w-4 shrink-0" />
           <span>No people have been added yet.</span>

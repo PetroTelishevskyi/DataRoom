@@ -4,6 +4,7 @@ import {
   IsIn,
   IsUUID,
   MaxLength,
+  ValidateIf,
   ValidateNested,
 } from "class-validator";
 
@@ -16,17 +17,19 @@ class ShareResourceDto {
 }
 
 export class CreateShareDto {
-  @IsIn(["USER"])
-  type!: "USER";
+  @IsIn(["USER", "PUBLIC_LINK"])
+  type!: "USER" | "PUBLIC_LINK";
 
   @ValidateNested()
   @Type(() => ShareResourceDto)
   resource!: ShareResourceDto;
 
+  @ValidateIf((dto: CreateShareDto) => dto.type === "USER")
   @IsEmail()
   @MaxLength(255)
-  recipientEmail!: string;
+  recipientEmail?: string;
 
+  @ValidateIf((dto: CreateShareDto) => dto.type === "USER")
   @IsIn(["VIEWER"])
-  role!: "VIEWER";
+  role?: "VIEWER";
 }

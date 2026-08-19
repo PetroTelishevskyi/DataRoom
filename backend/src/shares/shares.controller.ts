@@ -15,13 +15,20 @@ export class SharesController {
     @CurrentUser("id") userId: string,
     @Body() createShareDto: CreateShareDto,
   ) {
-    const share = await this.sharesService.createUserShare({
-      recipientEmail: createShareDto.recipientEmail,
-      resource: createShareDto.resource,
-      role: createShareDto.role,
-      type: createShareDto.type,
-      userId,
-    });
+    const share =
+      createShareDto.type === "PUBLIC_LINK"
+        ? await this.sharesService.createPublicLinkShare({
+            resource: createShareDto.resource,
+            type: createShareDto.type,
+            userId,
+          })
+        : await this.sharesService.createUserShare({
+            recipientEmail: createShareDto.recipientEmail ?? "",
+            resource: createShareDto.resource,
+            role: createShareDto.role ?? "VIEWER",
+            type: createShareDto.type,
+            userId,
+          });
 
     return {
       data: {

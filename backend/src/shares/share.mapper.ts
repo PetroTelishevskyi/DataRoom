@@ -24,6 +24,17 @@ export type ShareSummary = {
   createdAt: Date;
 };
 
+export type PublicLinkShareSummary = {
+  id: string;
+  type: "PUBLIC_LINK";
+  role: "VIEWER";
+  resource: ShareResource;
+  publicToken: string;
+  createdAt: Date;
+};
+
+export type ResourceShareSummary = ShareSummary | PublicLinkShareSummary;
+
 export type SharedWithMeResource =
   | {
       type: "DATA_ROOM";
@@ -53,14 +64,25 @@ export type SharedWithMeItem = {
   createdAt: Date;
 };
 
-type ShareRow = {
-  id: string;
-  type: ShareType;
-  role: ShareRole;
+type ShareTargetRow = {
   dataRoomId: string | null;
   folderId: string | null;
   fileId: string | null;
+};
+
+type ShareRow = ShareTargetRow & {
+  id: string;
+  type: ShareType;
+  role: ShareRole;
   recipientUser: PublicUser | null;
+  createdAt: Date;
+};
+
+type PublicLinkShareRow = ShareTargetRow & {
+  id: string;
+  type: ShareType;
+  role: ShareRole;
+  publicToken: string | null;
   createdAt: Date;
 };
 
@@ -106,6 +128,27 @@ export function toShareSummary(share: ShareRow): ShareSummary {
   };
 }
 
+export function toPublicLinkShareSummary(
+  share: PublicLinkShareRow,
+): PublicLinkShareSummary {
+  if (
+    share.type !== ShareType.PUBLIC_LINK ||
+    share.role !== ShareRole.VIEWER ||
+    !share.publicToken
+  ) {
+    throw new Error("Public link share invariant failed.");
+  }
+
+  return {
+    id: share.id,
+    type: "PUBLIC_LINK",
+    role: "VIEWER",
+    resource: toShareResource(share),
+    publicToken: share.publicToken,
+    createdAt: share.createdAt,
+  };
+}
+
 export function toSharedWithMeItem(
   share: SharedWithMeRow,
 ): SharedWithMeItem {
@@ -123,7 +166,7 @@ export function toSharedWithMeItem(
   };
 }
 
-function toShareResource(share: ShareRow): ShareResource {
+function toShareResource(share: ShareTargetRow): ShareResource {
   if (share.dataRoomId) {
     return {
       type: "DATA_ROOM",

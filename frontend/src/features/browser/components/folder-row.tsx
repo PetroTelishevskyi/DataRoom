@@ -27,6 +27,7 @@ export function FolderRow({
 }: FolderRowProps) {
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 	const [isRenameOpen, setIsRenameOpen] = useState(false)
+	const shouldShowActions = canDelete || canRename
 
 	return (
 		<div
@@ -36,32 +37,36 @@ export function FolderRow({
 			)}
 		>
 			<Link
-				className='flex min-w-0 items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+				className='group flex min-w-0 items-center gap-3 rounded-sm text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
 				to={href}
 			>
 				<Folder
 					aria-hidden
-					className='h-4 w-4 shrink-0 text-muted-foreground'
+					className='h-4 w-4 shrink-0 text-primary'
 				/>
-				<span className='truncate text-sm font-medium'>{folder.name}</span>
+				<span className='truncate text-sm font-medium underline-offset-4 group-hover:underline'>
+					{folder.name}
+				</span>
 			</Link>
 			<span className=' text-center text-sm text-muted-foreground'>-</span>
 			<span className='text-right text-sm text-muted-foreground'>
 				{new Date(folder.updatedAt).toLocaleDateString()}
 			</span>
 			<div className='flex justify-end'>
-				<ResourceActionsMenu
-					onDelete={
-						canDelete && onDeleteFolder
-							? () => setIsDeleteOpen(true)
-							: undefined
-					}
-					onRename={
-						canRename && onRenameFolder
-							? () => setIsRenameOpen(true)
-							: undefined
-					}
-				/>
+				{shouldShowActions ? (
+					<ResourceActionsMenu
+						onDelete={
+							canDelete && onDeleteFolder
+								? () => setIsDeleteOpen(true)
+								: undefined
+						}
+						onRename={
+							canRename && onRenameFolder
+								? () => setIsRenameOpen(true)
+								: undefined
+						}
+					/>
+				) : null}
 				{canRename && onRenameFolder ? (
 					<RenameFolderDialog
 						currentName={folder.name}

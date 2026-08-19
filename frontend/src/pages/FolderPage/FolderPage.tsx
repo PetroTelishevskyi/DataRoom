@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { toast } from "@/components/ui/toast/use-toast";
 import { getBrowserCapabilities } from "@/features/browser/browser-capabilities";
 import { ResourceBrowser } from "@/features/browser/components/resource-browser";
@@ -42,8 +42,32 @@ function isPdfFile(file: File) {
   );
 }
 
+type FolderLocationState = {
+  breadcrumbRootHref?: string;
+  breadcrumbRootLabel?: string;
+};
+
+function getBreadcrumbRootFromState(state: unknown) {
+  if (
+    typeof state === "object" &&
+    state !== null &&
+    "breadcrumbRootHref" in state &&
+    "breadcrumbRootLabel" in state &&
+    typeof state.breadcrumbRootHref === "string" &&
+    typeof state.breadcrumbRootLabel === "string"
+  ) {
+    return {
+      href: state.breadcrumbRootHref,
+      label: state.breadcrumbRootLabel,
+    };
+  }
+
+  return null;
+}
+
 export function FolderPage() {
   const { folderId = "" } = useParams();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { enqueueUploads } = useUploadQueue();
   const dataRoomsQuery = useQuery(dataRoomsQueryOptions());
@@ -56,6 +80,9 @@ export function FolderPage() {
   const dataRoom = dataRoomsQuery.data?.[0] ?? null;
   const contents = contentsQuery.data;
   const accessRole = contents?.access.role ?? "OWNER";
+  const breadcrumbRoot = getBreadcrumbRootFromState(
+    location.state as FolderLocationState | null,
+  );
   const createFolderMutation = useMutation({
     mutationFn: (name: string) =>
       createChildFolder({ name, parentFolderId: folderId }),
@@ -283,8 +310,8 @@ export function FolderPage() {
       onRenameFile={handleRenameFile}
       onRenameFolder={handleRenameFolder}
       onUploadFiles={handleUploadFiles}
-      rootHref="/"
-      title={dataRoom?.name ?? "Data Room"}
+      rootHref={breadcrumbRoot?.href ?? "/"}
+      title={breadcrumbRoot?.label ?? dataRoom?.name ?? "Data Room"}
     />
   );
 }

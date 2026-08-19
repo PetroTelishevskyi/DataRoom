@@ -23,6 +23,8 @@ export type ResourceBrowserProps = {
   breadcrumbs: ResourceBreadcrumbItem[];
   capabilities: BrowserCapabilities;
   getBreadcrumbHref: (breadcrumb: ResourceBreadcrumbItem) => string;
+  getFileHref?: (file: FileResourceItem) => string;
+  getFileState?: (file: FileResourceItem) => unknown;
   getFolderHref: (folder: FolderResourceItem) => string;
   hasResource: boolean;
   isError: boolean;

@@ -1,6 +1,8 @@
 import { apiRequest } from "@/lib/api";
 import type {
+  CreatePublicShareInput,
   CreateUserShareInput,
+  ResourceShareSummary,
   ShareResource,
   ShareSummary,
   SharedWithMeItem,
@@ -8,13 +10,13 @@ import type {
 
 type ShareResponse = {
   data: {
-    share: ShareSummary;
+    share: ResourceShareSummary;
   };
 };
 
 type SharesResponse = {
   data: {
-    shares: ShareSummary[];
+    shares: ResourceShareSummary[];
   };
 };
 
@@ -25,6 +27,15 @@ type SharedWithMeResponse = {
 };
 
 export async function createUserShare(input: CreateUserShareInput) {
+  const response = await apiRequest<ShareResponse>("/shares", {
+    body: JSON.stringify(input),
+    method: "POST",
+  });
+
+  return response.data.share as ShareSummary;
+}
+
+export async function createPublicShare(input: CreatePublicShareInput) {
   const response = await apiRequest<ShareResponse>("/shares", {
     body: JSON.stringify(input),
     method: "POST",

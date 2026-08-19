@@ -16,6 +16,8 @@ type ResourceTableProps = {
 	canRenameFolder: boolean
 	canShare: boolean
 	dataRoomId?: string
+	getFileHref?: (file: FileResourceItem) => string
+	getFileState?: (file: FileResourceItem) => unknown
 	getFolderHref: (folder: FolderResourceItem) => string
 	items: ResourceItem[]
 	onDeleteFile?: (file: FileResourceItem) => Promise<void>
@@ -44,6 +46,8 @@ export function ResourceTable({
 	canRenameFolder,
 	canShare,
 	dataRoomId,
+	getFileHref,
+	getFileState,
 	getFolderHref,
 	items,
 	onDeleteFile,
@@ -98,6 +102,8 @@ export function ResourceTable({
 								canShare={canShare}
 								dataRoomId={dataRoomId}
 								file={file}
+								getFileHref={getFileHref}
+								getFileState={getFileState}
 								key={`${file.type}-${file.id}`}
 								onDeleteFile={onDeleteFile}
 								onMoveFile={onMoveFile}

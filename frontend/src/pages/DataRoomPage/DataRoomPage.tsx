@@ -5,6 +5,8 @@ import { ResourceBrowser } from "@/features/browser/components/resource-browser"
 import { dataRoomContentsQueryOptions } from "@/features/data-rooms/data-room-queries";
 
 type DataRoomLocationState = {
+  breadcrumbRootHref?: string;
+  breadcrumbRootLabel?: string;
   dataRoomName?: string;
 };
 
@@ -21,6 +23,24 @@ function getDataRoomNameFromState(state: unknown) {
   return "Data Room";
 }
 
+function getBreadcrumbRootFromState(state: unknown) {
+  if (
+    typeof state === "object" &&
+    state !== null &&
+    "breadcrumbRootHref" in state &&
+    "breadcrumbRootLabel" in state &&
+    typeof state.breadcrumbRootHref === "string" &&
+    typeof state.breadcrumbRootLabel === "string"
+  ) {
+    return {
+      href: state.breadcrumbRootHref,
+      label: state.breadcrumbRootLabel,
+    };
+  }
+
+  return null;
+}
+
 export function DataRoomPage() {
   const { dataRoomId = "" } = useParams();
   const location = useLocation();
@@ -31,6 +51,9 @@ export function DataRoomPage() {
   const contents = contentsQuery.data;
   const accessRole = contents?.access.role ?? "VIEWER";
   const title = getDataRoomNameFromState(
+    location.state as DataRoomLocationState | null,
+  );
+  const breadcrumbRoot = getBreadcrumbRootFromState(
     location.state as DataRoomLocationState | null,
   );
 
@@ -46,8 +69,8 @@ export function DataRoomPage() {
       isError={contentsQuery.isError}
       isLoading={contentsQuery.isLoading}
       items={contents?.items ?? []}
-      rootHref={`/data-rooms/${dataRoomId}`}
-      title={title}
+      rootHref={breadcrumbRoot?.href ?? `/data-rooms/${dataRoomId}`}
+      title={breadcrumbRoot?.label ?? title}
     />
   );
 }

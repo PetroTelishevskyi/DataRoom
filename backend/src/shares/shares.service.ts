@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { AuthorizationService } from "../authorization/authorization.service";
 import { AppError } from "../common/errors/app-error";
@@ -6,8 +7,11 @@ import { PrismaService } from "../prisma/prisma.service";
 import { UsersService } from "../users/users.service";
 import {
   ShareResource,
+  PublicLinkShareSummary,
+  ResourceShareSummary,
   ShareSummary,
   SharedWithMeItem,
+  toPublicLinkShareSummary,
   toShareSummary,
   toSharedWithMeItem,
 } from "./share.mapper";
@@ -17,6 +21,12 @@ type CreateUserShareParams = {
   resource: ShareResource;
   role: "VIEWER";
   type: "USER";
+  userId: string;
+};
+
+type CreatePublicLinkShareParams = {
+  resource: ShareResource;
+  type: "PUBLIC_LINK";
   userId: string;
 };
 
@@ -91,21 +101,69 @@ export class SharesService {
 
   async listResourceShares(
     params: ListResourceSharesParams,
-  ): Promise<ShareSummary[]> {
+  ): Promise<ResourceShareSummary[]> {
     await this.assertOwnsResource(params.userId, params.resource);
 
-    const shares = await this.prisma.share.findMany({
-      where: {
-        ...this.toShareResourceWhere(params.resource),
+    const [userShares, publicLinkShares] = await Promise.all([
+      this.prisma.share.findMany({
+        where: {
+          ...this.toShareResourceWhere(params.resource),
+          role: ShareRole.VIEWER,
+          revokedAt: null,
+          type: ShareType.USER,
+        },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        select: this.shareSummarySelect(),
+      }),
+      this.prisma.share.findMany({
+        where: {
+          ...this.toShareResourceWhere(params.resource),
+          role: ShareRole.VIEWER,
+          revokedAt: null,
+          type: ShareType.PUBLIC_LINK,
+        },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        select: this.publicLinkShareSummarySelect(),
+      }),
+    ]);
+
+    return [
+      ...userShares.map(toShareSummary),
+      ...publicLinkShares.map(toPublicLinkShareSummary),
+    ];
+  }
+
+  async createPublicLinkShare(
+    params: CreatePublicLinkShareParams,
+  ): Promise<PublicLinkShareSummary> {
+    if (params.type !== "PUBLIC_LINK") {
+      throw new AppError(
+        "INVALID_SHARE_TYPE",
+        HttpStatus.BAD_REQUEST,
+        "Only public link shares are supported.",
+      );
+    }
+
+    await this.assertOwnsResource(params.userId, params.resource);
+
+    const existingShare = await this.findActivePublicLinkShare(params.resource);
+
+    if (existingShare) {
+      return toPublicLinkShareSummary(existingShare);
+    }
+
+    const share = await this.prisma.share.create({
+      data: {
+        ...this.toShareResourceData(params.resource),
+        createdById: params.userId,
+        publicToken: this.createPublicToken(),
         role: ShareRole.VIEWER,
-        revokedAt: null,
-        type: ShareType.USER,
+        type: ShareType.PUBLIC_LINK,
       },
-      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-      select: this.shareSummarySelect(),
+      select: this.publicLinkShareSummarySelect(),
     });
 
-    return shares.map(toShareSummary);
+    return toPublicLinkShareSummary(share);
   }
 
   async listSharedWithMe(userId: string): Promise<SharedWithMeItem[]> {
@@ -154,6 +212,22 @@ export class SharesService {
       },
       select: this.shareSummarySelect(),
     });
+  }
+
+  private findActivePublicLinkShare(resource: ShareResource) {
+    return this.prisma.share.findFirst({
+      where: {
+        ...this.toShareResourceWhere(resource),
+        role: ShareRole.VIEWER,
+        revokedAt: null,
+        type: ShareType.PUBLIC_LINK,
+      },
+      select: this.publicLinkShareSummarySelect(),
+    });
+  }
+
+  private createPublicToken(): string {
+    return randomBytes(32).toString("base64url");
   }
 
   private normalizeEmail(email: string): string {
@@ -211,6 +285,19 @@ export class SharesService {
           name: true,
         },
       },
+      createdAt: true,
+    } as const;
+  }
+
+  private publicLinkShareSummarySelect() {
+    return {
+      id: true,
+      type: true,
+      role: true,
+      dataRoomId: true,
+      folderId: true,
+      fileId: true,
+      publicToken: true,
       createdAt: true,
     } as const;
   }

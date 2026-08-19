@@ -1,4 +1,11 @@
 import type { AuthUser } from "@/features/auth/auth.types";
+import type {
+  BreadcrumbItem,
+  FolderSummary,
+  PageInfo,
+  ResourceAccess,
+  ResourceItem,
+} from "@/features/data-rooms/data-room.types";
 
 export type PublicUser = Pick<AuthUser, "id" | "email" | "name">;
 
@@ -28,6 +35,17 @@ export type ShareSummary = {
   recipient: PublicUser;
   createdAt: string;
 };
+
+export type PublicLinkShareSummary = {
+  id: string;
+  type: "PUBLIC_LINK";
+  role: "VIEWER";
+  resource: ShareResource;
+  publicToken: string;
+  createdAt: string;
+};
+
+export type ResourceShareSummary = ShareSummary | PublicLinkShareSummary;
 
 export type SharedWithMeResource =
   | {
@@ -64,3 +82,43 @@ export type CreateUserShareInput = {
   recipientEmail: string;
   role: "VIEWER";
 };
+
+export type CreatePublicShareInput = {
+  type: "PUBLIC_LINK";
+  resource: ShareResource;
+};
+
+export type PublicShareResource =
+  | {
+      type: "DATA_ROOM";
+      id: string;
+      name: string;
+    }
+  | {
+      type: "FOLDER";
+      id: string;
+    }
+  | {
+      type: "FILE";
+      id: string;
+      name: string;
+      dataRoomId: string;
+      folderId: string;
+      updatedAt: string;
+    };
+
+export type PublicShareContents = {
+  resource: PublicShareResource;
+  folder: FolderSummary | null;
+  breadcrumbs: BreadcrumbItem[];
+  items: ResourceItem[];
+  pageInfo: PageInfo;
+  access: ResourceAccess;
+};
+
+export type PublicFileShare = {
+  resource: Extract<PublicShareResource, { type: "FILE" }>;
+  access: ResourceAccess;
+};
+
+export type PublicShareData = PublicShareContents | PublicFileShare;

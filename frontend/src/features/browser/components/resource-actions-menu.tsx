@@ -51,6 +51,17 @@ export function ResourceActionsMenu({
   const isOpenEnabled = canOpen ?? Boolean(onOpen);
   const isRenameEnabled = canRename ?? Boolean(onRename);
   const isShareEnabled = canShare ?? Boolean(onShare);
+  const shouldShowOpen = showOpen || Boolean(onOpen);
+  const shouldShowRename = isRenameEnabled || Boolean(onRename);
+  const shouldShowMove = showMove || Boolean(onMove);
+  const shouldShowShare = showShare || Boolean(onShare);
+  const shouldShowDelete = isDeleteEnabled || Boolean(onDelete);
+  const hasPrimaryActions =
+    shouldShowOpen || shouldShowRename || shouldShowMove || shouldShowShare;
+
+  if (!hasPrimaryActions && !shouldShowDelete) {
+    return null;
+  }
 
   return (
     <DropdownMenu>
@@ -66,26 +77,28 @@ export function ResourceActionsMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {showOpen ? (
+        {shouldShowOpen ? (
           <DropdownMenuItem disabled={!isOpenEnabled || !onOpen} onSelect={onOpen}>
             <ExternalLink aria-hidden className="h-4 w-4" />
             Open
           </DropdownMenuItem>
         ) : null}
-        <DropdownMenuItem
-          disabled={!isRenameEnabled || !onRename}
-          onSelect={onRename}
-        >
-          <Pencil aria-hidden className="h-4 w-4" />
-          Rename
-        </DropdownMenuItem>
-        {showMove ? (
+        {shouldShowRename ? (
+          <DropdownMenuItem
+            disabled={!isRenameEnabled || !onRename}
+            onSelect={onRename}
+          >
+            <Pencil aria-hidden className="h-4 w-4" />
+            Rename
+          </DropdownMenuItem>
+        ) : null}
+        {shouldShowMove ? (
           <DropdownMenuItem disabled={!isMoveEnabled || !onMove} onSelect={onMove}>
             <Undo2 aria-hidden className="h-4 w-4" />
             Move
           </DropdownMenuItem>
         ) : null}
-        {showShare ? (
+        {shouldShowShare ? (
           <DropdownMenuItem
             disabled={!isShareEnabled || !onShare}
             onSelect={onShare}
@@ -94,15 +107,17 @@ export function ResourceActionsMenu({
             Share
           </DropdownMenuItem>
         ) : null}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="text-destructive focus:text-destructive"
-          disabled={!isDeleteEnabled || !onDelete}
-          onSelect={onDelete}
-        >
-          <Trash2 aria-hidden className="h-4 w-4" />
-          Delete
-        </DropdownMenuItem>
+        {shouldShowDelete && hasPrimaryActions ? <DropdownMenuSeparator /> : null}
+        {shouldShowDelete ? (
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            disabled={!isDeleteEnabled || !onDelete}
+            onSelect={onDelete}
+          >
+            <Trash2 aria-hidden className="h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );

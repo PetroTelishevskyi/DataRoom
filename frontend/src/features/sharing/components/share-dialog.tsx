@@ -9,6 +9,7 @@ import {
 import type { NamedShareResource } from "../share.types";
 import { AddUserShareForm } from "./add-user-share-form";
 import { PeopleWithAccess } from "./people-with-access";
+import { PublicLinkSection } from "./public-link-section";
 
 type ShareDialogProps = {
   children?: ReactNode;
@@ -59,6 +60,10 @@ export function ShareDialog({
             <h3 className="text-sm font-semibold">Add people</h3>
             <AddUserShareForm resource={resource} />
           </section>
+
+          <div className="border-t" />
+
+          <PublicLinkSection resource={resource} />
         </div>
       </DialogContent>
     </Dialog>

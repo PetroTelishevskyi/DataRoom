@@ -11,18 +11,6 @@ import {
 import { useSharedWithMe } from "../hooks/use-shared-with-me";
 import type { SharedWithMeItem } from "../share.types";
 
-function getResourceTypeLabel(resource: SharedWithMeItem["resource"]) {
-  if (resource.type === "DATA_ROOM") {
-    return "Data Room";
-  }
-
-  if (resource.type === "FOLDER") {
-    return "Folder";
-  }
-
-  return "PDF";
-}
-
 function getResourceHref(resource: SharedWithMeItem["resource"]) {
   if (resource.type === "DATA_ROOM") {
     return `/data-rooms/${resource.id}`;
@@ -36,10 +24,20 @@ function getResourceHref(resource: SharedWithMeItem["resource"]) {
 }
 
 function getResourceState(resource: SharedWithMeItem["resource"]) {
+  const sharedWithMeRoot = {
+    breadcrumbRootHref: "/shared-with-me",
+    breadcrumbRootLabel: "Shared with me",
+  };
+
   if (resource.type === "DATA_ROOM") {
     return {
+      ...sharedWithMeRoot,
       dataRoomName: resource.name,
     };
+  }
+
+  if (resource.type === "FOLDER") {
+    return sharedWithMeRoot;
   }
 
   if (resource.type === "FILE") {
@@ -51,112 +49,208 @@ function getResourceState(resource: SharedWithMeItem["resource"]) {
   return undefined;
 }
 
-function ResourceIcon({ resource }: { resource: SharedWithMeItem["resource"] }) {
+function formatSharedDate(createdAt: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(createdAt));
+}
+
+function SharedFolderCard({ share }: { share: SharedWithMeItem }) {
+  const resource = share.resource;
+
   if (resource.type === "DATA_ROOM") {
-    return <Database aria-hidden className="h-4 w-4 text-muted-foreground" />;
+    return (
+      <Link
+        className="group flex min-w-0 items-start justify-between gap-3 rounded-lg border bg-white p-4 shadow-sm transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        state={getResourceState(resource)}
+        to={getResourceHref(resource)}
+      >
+        <span className="flex min-w-0 flex-1 items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-muted/30">
+            <Database aria-hidden className="h-4 w-4 text-primary" />
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate text-base font-medium text-primary underline-offset-4 group-hover:underline">
+              {resource.name}
+            </span>
+            <span className="mt-1 block text-xs text-muted-foreground">
+              {formatSharedDate(share.createdAt)}
+            </span>
+          </span>
+        </span>
+      </Link>
+    );
   }
 
-  if (resource.type === "FOLDER") {
-    return <Folder aria-hidden className="h-4 w-4 text-muted-foreground" />;
-  }
+  return (
+    <Link
+      className="group flex min-w-0 items-start justify-between gap-3 rounded-lg border bg-white p-4 shadow-sm transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      state={getResourceState(resource)}
+      to={getResourceHref(resource)}
+    >
+      <span className="flex min-w-0 flex-1 items-start gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-muted/30">
+          <Folder aria-hidden className="h-4 w-4 text-primary" />
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate text-base font-medium text-primary underline-offset-4 group-hover:underline">
+            {resource.name}
+          </span>
+          <span className="mt-1 block text-xs text-muted-foreground">
+            {formatSharedDate(share.createdAt)}
+          </span>
+        </span>
+      </span>
+    </Link>
+  );
+}
 
-  return <FileText aria-hidden className="h-4 w-4 text-muted-foreground" />;
+function SharedFilesTable({ shares }: { shares: SharedWithMeItem[] }) {
+  return (
+    <section className="min-h-0">
+      <h2 className="mb-3 text-lg font-semibold tracking-tight">
+        Files ({shares.length})
+      </h2>
+      <div className="overflow-hidden rounded-lg border">
+        <div className="grid grid-cols-[minmax(0,1fr)_8rem_8rem] border-b bg-muted/40 px-4 py-3 text-xs font-medium uppercase text-muted-foreground">
+          <span>Name</span>
+          <span className="text-right">Size</span>
+          <span className="text-right">Shared</span>
+        </div>
+        {shares.map((share) => (
+          <Link
+            className="group grid grid-cols-[minmax(0,1fr)_8rem_8rem] items-center gap-4 border-b px-4 py-5 transition-colors last:border-b-0 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+            key={share.id}
+            state={getResourceState(share.resource)}
+            to={getResourceHref(share.resource)}
+          >
+            <span className="flex min-w-0 items-center gap-3">
+              <FileText aria-hidden className="h-4 w-4 shrink-0 text-primary" />
+              <span className="truncate text-sm font-medium text-primary underline-offset-4 group-hover:underline">
+                {share.resource.name}
+              </span>
+            </span>
+            <span className="text-right text-sm text-muted-foreground">-</span>
+            <span className="text-right text-sm text-muted-foreground">
+              {formatSharedDate(share.createdAt)}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SharedResourceSkeleton() {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-8">
+      <section>
+        <div className="mb-3 h-6 w-28 rounded bg-muted" />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div className="h-[78px] rounded-lg border bg-white p-4" key={index}>
+              <div className="h-5 w-2/3 rounded bg-muted" />
+              <div className="mt-2 h-4 w-20 rounded bg-muted" />
+            </div>
+          ))}
+        </div>
+      </section>
+      <section>
+        <div className="mb-3 h-6 w-20 rounded bg-muted" />
+        <div className="overflow-hidden rounded-lg border">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div className="border-b px-4 py-5 last:border-b-0" key={index}>
+              <div className="h-5 w-1/3 rounded bg-muted" />
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function SharedBrowserSections({ shares }: { shares: SharedWithMeItem[] }) {
+  const folderShares = shares.filter((share) => share.resource.type !== "FILE");
+  const fileShares = shares.filter((share) => share.resource.type === "FILE");
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-8">
+      {folderShares.length ? (
+        <section>
+          <h2 className="mb-3 text-lg font-semibold tracking-tight">
+            Folders ({folderShares.length})
+          </h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            {folderShares.map((share) => (
+              <SharedFolderCard key={share.id} share={share} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {fileShares.length ? <SharedFilesTable shares={fileShares} /> : null}
+    </div>
+  );
+}
+
+function SharedResourceIcon() {
+  return <Users aria-hidden />;
+}
+
+function SharedResourceEmptyState() {
+  return (
+    <Empty className="min-h-[320px] rounded-lg border">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <SharedResourceIcon />
+        </EmptyMedia>
+        <EmptyTitle>Nothing has been shared with you yet.</EmptyTitle>
+        <EmptyDescription>
+          Resources shared directly with your account will appear here.
+        </EmptyDescription>
+      </EmptyHeader>
+    </Empty>
+  );
+}
+
+function SharedResourceErrorState({ onRetry }: { onRetry: () => void }) {
+  return (
+    <Empty className="min-h-[320px] rounded-lg border">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <SharedResourceIcon />
+        </EmptyMedia>
+        <EmptyTitle>Shared resources are unavailable</EmptyTitle>
+        <EmptyDescription>
+          Try again or check whether your access has changed.
+        </EmptyDescription>
+        <Button className="mt-5" onClick={onRetry} type="button" variant="outline">
+          <RefreshCcw aria-hidden className="h-4 w-4" />
+          Retry
+        </Button>
+      </EmptyHeader>
+    </Empty>
+  );
 }
 
 export function SharedResourceTable() {
   const sharedWithMeQuery = useSharedWithMe();
 
   if (sharedWithMeQuery.isLoading) {
-    return (
-      <div className="overflow-hidden rounded-lg border">
-        <div className="grid grid-cols-[minmax(0,1fr)_8rem_12rem] border-b bg-muted/40 px-4 py-3 text-xs font-medium uppercase text-muted-foreground">
-          <span>Name</span>
-          <span>Type</span>
-          <span>Shared by</span>
-        </div>
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div
-            className="grid grid-cols-[minmax(0,1fr)_8rem_12rem] gap-4 border-b px-4 py-4 last:border-b-0"
-            key={index}
-          >
-            <div className="h-5 rounded bg-muted" />
-            <div className="h-5 rounded bg-muted" />
-            <div className="h-5 rounded bg-muted" />
-          </div>
-        ))}
-      </div>
-    );
+    return <SharedResourceSkeleton />;
   }
 
   if (sharedWithMeQuery.isError) {
     return (
-      <Empty className="min-h-[320px] rounded-lg border">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <Users aria-hidden />
-          </EmptyMedia>
-          <EmptyTitle>Shared resources are unavailable</EmptyTitle>
-          <EmptyDescription>
-            Try again or check whether your access has changed.
-          </EmptyDescription>
-          <Button
-            className="mt-5"
-            onClick={() => void sharedWithMeQuery.refetch()}
-            type="button"
-            variant="outline"
-          >
-            <RefreshCcw aria-hidden className="h-4 w-4" />
-            Retry
-          </Button>
-        </EmptyHeader>
-      </Empty>
+      <SharedResourceErrorState onRetry={() => void sharedWithMeQuery.refetch()} />
     );
   }
 
   if (!sharedWithMeQuery.data?.length) {
-    return (
-      <Empty className="min-h-[320px] rounded-lg border">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <Users aria-hidden />
-          </EmptyMedia>
-          <EmptyTitle>Nothing has been shared with you yet.</EmptyTitle>
-          <EmptyDescription>
-            Resources shared directly with your account will appear here.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    );
+    return <SharedResourceEmptyState />;
   }
 
-  return (
-    <div className="overflow-hidden rounded-lg border">
-      <div className="grid grid-cols-[minmax(0,1fr)_8rem_12rem] border-b bg-muted/40 px-4 py-3 text-xs font-medium uppercase text-muted-foreground">
-        <span>Name</span>
-        <span>Type</span>
-        <span>Shared by</span>
-      </div>
-      {sharedWithMeQuery.data.map((share) => (
-        <Link
-          className="grid grid-cols-[minmax(0,1fr)_8rem_12rem] items-center gap-4 border-b px-4 py-4 transition-colors last:border-b-0 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-          key={share.id}
-          state={getResourceState(share.resource)}
-          to={getResourceHref(share.resource)}
-        >
-          <span className="flex min-w-0 items-center gap-3">
-            <ResourceIcon resource={share.resource} />
-            <span className="truncate text-sm font-medium">
-              {share.resource.name}
-            </span>
-          </span>
-          <span className="text-sm text-muted-foreground">
-            {getResourceTypeLabel(share.resource)}
-          </span>
-          <span className="truncate text-sm text-muted-foreground">
-            {share.sharedBy.name?.trim() || share.sharedBy.email}
-          </span>
-        </Link>
-      ))}
-    </div>
-  );
+  return <SharedBrowserSections shares={sharedWithMeQuery.data} />;
 }

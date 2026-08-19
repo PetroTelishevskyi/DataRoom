@@ -8,6 +8,9 @@ import { FileViewerPage } from "@/pages/FileViewerPage/FileViewerPage";
 import { FolderPage } from "@/pages/FolderPage/FolderPage";
 import { HomePage } from "@/pages/HomePage/HomePage";
 import { LoginPage } from "@/pages/LoginPage/LoginPage";
+import { PublicFilePage } from "@/pages/PublicFilePage/PublicFilePage";
+import { PublicFolderPage } from "@/pages/PublicFolderPage/PublicFolderPage";
+import { PublicSharePage } from "@/pages/PublicSharePage/PublicSharePage";
 import { RegisterPage } from "@/pages/RegisterPage/RegisterPage";
 import { SharedWithMePage } from "@/pages/SharedWithMePage/SharedWithMePage";
 
@@ -51,6 +54,18 @@ export const router = createBrowserRouter([
           {
             path: "/shared-with-me",
             element: <SharedWithMePage />,
+          },
+          {
+            path: "/share/:token",
+            element: <PublicSharePage />,
+          },
+          {
+            path: "/share/:token/folders/:folderId",
+            element: <PublicFolderPage />,
+          },
+          {
+            path: "/share/:token/files/:fileId",
+            element: <PublicFilePage />,
           },
         ],
       },
