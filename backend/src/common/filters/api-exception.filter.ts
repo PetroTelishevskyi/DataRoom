@@ -47,6 +47,10 @@ export class ApiExceptionFilter implements ExceptionFilter {
     const status = this.getStatus(exception);
     const body = this.getBody(exception, status);
 
+    if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
+      console.error(exception);
+    }
+
     response.status(status).json(body);
   }
 
