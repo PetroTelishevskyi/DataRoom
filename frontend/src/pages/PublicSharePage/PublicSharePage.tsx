@@ -119,7 +119,7 @@ function PublicBrowser({
   publicShare: PublicShareContents;
   token: string;
 }) {
-  const linkRoot = `/shared-link?token=${encodeURIComponent(token)}`;
+  const linkRoot = `/?shareToken=${encodeURIComponent(token)}`;
   const getFolderLink = (folderId: string) =>
     `${linkRoot}&folderId=${encodeURIComponent(folderId)}`;
   const getFileLink = (fileId: string) =>
@@ -147,7 +147,11 @@ function PublicBrowser({
 export function PublicSharePage() {
   const { token: pathToken = "" } = useParams();
   const [searchParams] = useSearchParams();
-  const token = pathToken || searchParams.get("token") || "";
+  const token =
+    pathToken ||
+    searchParams.get("shareToken") ||
+    searchParams.get("token") ||
+    "";
   const folderId = searchParams.get("folderId") || "";
   const fileId = searchParams.get("fileId") || "";
   const publicShareQuery = usePublicShare(folderId || fileId ? "" : token);

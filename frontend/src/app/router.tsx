@@ -1,4 +1,4 @@
-import { Navigate, createBrowserRouter } from "react-router-dom";
+import { Navigate, createBrowserRouter, useSearchParams } from "react-router-dom";
 import { PublicOnlyRoute } from "@/features/auth/PublicOnlyRoute";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
 import { AuthenticatedAppLayout } from "@/layouts/AuthenticatedAppLayout/AuthenticatedAppLayout";
@@ -13,6 +13,16 @@ import { PublicFolderPage } from "@/pages/PublicFolderPage/PublicFolderPage";
 import { PublicSharePage } from "@/pages/PublicSharePage/PublicSharePage";
 import { RegisterPage } from "@/pages/RegisterPage/RegisterPage";
 import { SharedWithMePage } from "@/pages/SharedWithMePage/SharedWithMePage";
+
+function HomeRoutePage() {
+  const [searchParams] = useSearchParams();
+
+  if (searchParams.has("shareToken")) {
+    return <PublicSharePage />;
+  }
+
+  return <HomePage />;
+}
 
 export const router = createBrowserRouter([
   {
@@ -41,7 +51,7 @@ export const router = createBrowserRouter([
         children: [
           {
             path: "/",
-            element: <HomePage />,
+            element: <HomeRoutePage />,
           },
           {
             path: "/data-rooms/:dataRoomId",

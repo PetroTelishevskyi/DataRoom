@@ -26,7 +26,7 @@ export function PublicLinkSection({ resource }: PublicLinkSectionProps) {
       return "";
     }
 
-    return `${window.location.origin}/shared-link?token=${encodeURIComponent(
+    return `${window.location.origin}/?shareToken=${encodeURIComponent(
       publicLinkShare.publicToken,
     )}`;
   }, [publicLinkShare]);
