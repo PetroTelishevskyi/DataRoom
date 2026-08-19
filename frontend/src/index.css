@@ -11,7 +11,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
+/* @layer base {
 	:root {
 		--background: 0 0% 96%;
 		--foreground: 222.2 84% 4.9%;
@@ -30,6 +30,36 @@
 		--border: 214.3 31.8% 91.4%;
 		--input: 214.3 31.8% 91.4%;
 		--ring: 222.2 84% 4.9%;
+		--radius: 0.5rem;
+	} */
+
+@layer base {
+	:root {
+		--background: 220 33% 98%;
+		--foreground: 222.2 47% 11%;
+
+		--card: 0 0% 100%;
+		--card-foreground: 222.2 47% 11%;
+
+		--primary: 221 83% 53%;
+		--primary-foreground: 210 40% 98%;
+
+		--secondary: 214 32% 95%;
+		--secondary-foreground: 222.2 47% 18%;
+
+		--muted: 215 28% 95%;
+		--muted-foreground: 215 16% 46%;
+
+		--accent: 214 100% 96%;
+		--accent-foreground: 221 83% 45%;
+
+		--destructive: 0 84% 60%;
+		--destructive-foreground: 210 40% 98%;
+
+		--border: 214 32% 89%;
+		--input: 214 32% 91%;
+		--ring: 221 83% 53%;
+
 		--radius: 0.5rem;
 	}
 
