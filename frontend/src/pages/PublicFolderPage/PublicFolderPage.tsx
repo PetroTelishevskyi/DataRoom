@@ -33,6 +33,7 @@ function getPublicFolderBreadcrumbs(publicFolder: PublicShareContents) {
 export function PublicFolderPage() {
   const { folderId = "", token = "" } = useParams();
   const publicFolderQuery = usePublicFolder(token, folderId);
+  const linkRoot = `/shared-link/${token}`;
 
   if (publicFolderQuery.isLoading) {
     return (
@@ -73,16 +74,16 @@ export function PublicFolderPage() {
       breadcrumbs={getPublicFolderBreadcrumbs(publicFolderQuery.data)}
       capabilities={getBrowserCapabilities("VIEWER")}
       getBreadcrumbHref={(breadcrumb) =>
-        `/share/${token}/folders/${breadcrumb.id}`
+        `${linkRoot}/folders/${breadcrumb.id}`
       }
-      getFileHref={(file) => `/share/${token}/files/${file.id}`}
+      getFileHref={(file) => `${linkRoot}/files/${file.id}`}
       getFileState={(file) => ({ fileName: file.name })}
-      getFolderHref={(folder) => `/share/${token}/folders/${folder.id}`}
+      getFolderHref={(folder) => `${linkRoot}/folders/${folder.id}`}
       hasResource
       isError={false}
       isLoading={false}
       items={publicFolderQuery.data.items}
-      rootHref={`/share/${token}`}
+      rootHref={linkRoot}
       title={getPublicFolderTitle(publicFolderQuery.data)}
     />
   );

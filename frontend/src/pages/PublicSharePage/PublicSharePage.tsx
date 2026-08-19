@@ -112,22 +112,24 @@ function PublicBrowser({
   publicShare: PublicShareContents;
   token: string;
 }) {
+  const linkRoot = `/shared-link/${token}`;
+
   return (
     <ResourceBrowser
       accessRole="VIEWER"
       breadcrumbs={getPublicBrowserBreadcrumbs(publicShare)}
       capabilities={getBrowserCapabilities("VIEWER")}
       getBreadcrumbHref={(breadcrumb) =>
-        `/share/${token}/folders/${breadcrumb.id}`
+        `${linkRoot}/folders/${breadcrumb.id}`
       }
-      getFileHref={(file) => `/share/${token}/files/${file.id}`}
+      getFileHref={(file) => `${linkRoot}/files/${file.id}`}
       getFileState={(file) => ({ fileName: file.name })}
-      getFolderHref={(folder) => `/share/${token}/folders/${folder.id}`}
+      getFolderHref={(folder) => `${linkRoot}/folders/${folder.id}`}
       hasResource
       isError={false}
       isLoading={false}
       items={publicShare.items}
-      rootHref={`/share/${token}`}
+      rootHref={linkRoot}
       title={getPublicBrowserTitle(publicShare)}
     />
   );
