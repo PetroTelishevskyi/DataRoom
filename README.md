@@ -116,78 +116,24 @@ npm run lint:backend
 ## Data Model / ERD
 
 ```mermaid
-erDiagram
-  USER ||--o{ DATA_ROOM : owns
-  USER ||--o{ SHARE : creates
-  USER ||--o{ SHARE : receives
+flowchart LR
+  User["User<br/>id PK<br/>email UK<br/>passwordHash<br/>name"]
+  DataRoom["DataRoom<br/>id PK<br/>name<br/>ownerId FK"]
+  Folder["Folder<br/>id PK<br/>name<br/>nameKey<br/>kind<br/>dataRoomId FK<br/>parentId FK"]
+  File["File<br/>id PK<br/>name<br/>nameKey<br/>status<br/>folderId FK<br/>storageKey UK<br/>mimeType<br/>sizeBytes"]
+  Share["Share<br/>id PK<br/>type<br/>role<br/>recipientUserId FK<br/>publicToken UK<br/>createdById FK<br/>revokedAt"]
 
-  DATA_ROOM ||--o{ FOLDER : contains
-  DATA_ROOM ||--o{ FILE : contains
-  DATA_ROOM ||--o{ SHARE : shared_as_target
+  User -->|"owns many"| DataRoom
+  DataRoom -->|"contains many"| Folder
+  DataRoom -->|"contains many"| File
+  Folder -->|"parent of many"| Folder
+  Folder -->|"contains many"| File
 
-  FOLDER ||--o{ FOLDER : parent_child
-  FOLDER ||--o{ FILE : contains
-  FOLDER ||--o{ SHARE : shared_as_target
-
-  FILE ||--o{ SHARE : shared_as_target
-
-  USER {
-    string id PK
-    string email UK
-    string passwordHash
-    string name
-    datetime createdAt
-    datetime updatedAt
-  }
-
-  DATA_ROOM {
-    string id PK
-    string name
-    string ownerId FK
-    datetime createdAt
-    datetime updatedAt
-  }
-
-  FOLDER {
-    string id PK
-    string name
-    string nameKey
-    string kind
-    string dataRoomId FK
-    string parentId FK
-    datetime createdAt
-    datetime updatedAt
-  }
-
-  FILE {
-    string id PK
-    string name
-    string nameKey
-    string status
-    string dataRoomId FK
-    string folderId FK
-    string storageKey UK
-    string mimeType
-    bigint sizeBytes
-    datetime uploadedAt
-    datetime createdAt
-    datetime updatedAt
-  }
-
-  SHARE {
-    string id PK
-    string type
-    string role
-    string dataRoomId FK
-    string folderId FK
-    string fileId FK
-    string recipientUserId FK
-    string publicToken UK
-    string createdById FK
-    datetime revokedAt
-    datetime createdAt
-    datetime updatedAt
-  }
+  User -->|"creates"| Share
+  Share -->|"optional recipient"| User
+  Share -->|"targets one DataRoom, Folder, or File"| DataRoom
+  Share -->|"targets one DataRoom, Folder, or File"| Folder
+  Share -->|"targets one DataRoom, Folder, or File"| File
 ```
 
 Important constraints:
