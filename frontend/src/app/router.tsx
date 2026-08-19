@@ -79,6 +79,10 @@ export const router = createBrowserRouter([
             path: "/shared-link/:token/files/:fileId",
             element: <PublicFilePage />,
           },
+          {
+            path: "/shared-link",
+            element: <PublicSharePage />,
+          },
         ],
       },
       {

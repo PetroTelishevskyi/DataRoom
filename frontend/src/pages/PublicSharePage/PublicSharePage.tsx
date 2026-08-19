@@ -1,5 +1,5 @@
 import { FileText, RefreshCcw } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -11,6 +11,7 @@ import {
 import { getBrowserCapabilities } from "@/features/browser/browser-capabilities";
 import { ResourceBrowser } from "@/features/browser/components/resource-browser";
 import { usePublicFileViewUrl } from "@/features/sharing/hooks/use-public-file-view-url";
+import { usePublicFolder } from "@/features/sharing/hooks/use-public-folder";
 import { usePublicShare } from "@/features/sharing/hooks/use-public-share";
 import type {
   PublicFileShare,
@@ -65,20 +66,26 @@ function PublicUnavailableState({
 }
 
 function PublicFileViewer({
+  fileName = "PDF file",
+  fileId,
   publicShare,
   token,
 }: {
-  publicShare: PublicFileShare;
+  fileName?: string;
+  fileId?: string;
+  publicShare?: PublicFileShare;
   token: string;
 }) {
-  const viewUrlQuery = usePublicFileViewUrl(token, publicShare.resource.id);
+  const resolvedFileId = fileId ?? publicShare?.resource.id ?? "";
+  const resolvedFileName = publicShare?.resource.name ?? fileName;
+  const viewUrlQuery = usePublicFileViewUrl(token, resolvedFileId);
 
   return (
     <section className="flex h-full min-h-0 flex-col px-6 py-6">
       <div className="mb-4 flex min-w-0 shrink-0 items-center gap-3">
         <FileText aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
         <h1 className="truncate text-lg font-semibold tracking-tight">
-          {publicShare.resource.name}
+          {resolvedFileName}
         </h1>
       </div>
 
@@ -97,7 +104,7 @@ function PublicFileViewer({
           <iframe
             className="h-full w-full"
             src={viewUrlQuery.data.url}
-            title={publicShare.resource.name}
+            title={resolvedFileName}
           />
         ) : null}
       </div>
@@ -112,19 +119,21 @@ function PublicBrowser({
   publicShare: PublicShareContents;
   token: string;
 }) {
-  const linkRoot = `/shared-link/${token}`;
+  const linkRoot = `/shared-link?token=${encodeURIComponent(token)}`;
+  const getFolderLink = (folderId: string) =>
+    `${linkRoot}&folderId=${encodeURIComponent(folderId)}`;
+  const getFileLink = (fileId: string) =>
+    `${linkRoot}&fileId=${encodeURIComponent(fileId)}`;
 
   return (
     <ResourceBrowser
       accessRole="VIEWER"
       breadcrumbs={getPublicBrowserBreadcrumbs(publicShare)}
       capabilities={getBrowserCapabilities("VIEWER")}
-      getBreadcrumbHref={(breadcrumb) =>
-        `${linkRoot}/folders/${breadcrumb.id}`
-      }
-      getFileHref={(file) => `${linkRoot}/files/${file.id}`}
+      getBreadcrumbHref={(breadcrumb) => getFolderLink(breadcrumb.id)}
+      getFileHref={(file) => getFileLink(file.id)}
       getFileState={(file) => ({ fileName: file.name })}
-      getFolderHref={(folder) => `${linkRoot}/folders/${folder.id}`}
+      getFolderHref={(folder) => getFolderLink(folder.id)}
       hasResource
       isError={false}
       isLoading={false}
@@ -136,8 +145,56 @@ function PublicBrowser({
 }
 
 export function PublicSharePage() {
-  const { token = "" } = useParams();
-  const publicShareQuery = usePublicShare(token);
+  const { token: pathToken = "" } = useParams();
+  const [searchParams] = useSearchParams();
+  const token = pathToken || searchParams.get("token") || "";
+  const folderId = searchParams.get("folderId") || "";
+  const fileId = searchParams.get("fileId") || "";
+  const publicShareQuery = usePublicShare(folderId || fileId ? "" : token);
+  const publicFolderQuery = usePublicFolder(token, folderId);
+  const publicFileViewUrlQuery = usePublicFileViewUrl(token, fileId);
+
+  if (fileId) {
+    if (publicFileViewUrlQuery.isLoading) {
+      return (
+        <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center text-sm text-muted-foreground">
+          Loading shared file...
+        </div>
+      );
+    }
+
+    if (publicFileViewUrlQuery.isError || !publicFileViewUrlQuery.data) {
+      return (
+        <PublicUnavailableState
+          onRetry={() => void publicFileViewUrlQuery.refetch()}
+        />
+      );
+    }
+
+    return <PublicFileViewer fileId={fileId} token={token} />;
+  }
+
+  if (folderId) {
+    if (publicFolderQuery.isLoading) {
+      return (
+        <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center text-sm text-muted-foreground">
+          Loading shared folder...
+        </div>
+      );
+    }
+
+    if (publicFolderQuery.isError || !publicFolderQuery.data) {
+      return (
+        <PublicUnavailableState
+          onRetry={() => void publicFolderQuery.refetch()}
+        />
+      );
+    }
+
+    return (
+      <PublicBrowser publicShare={publicFolderQuery.data} token={token} />
+    );
+  }
 
   if (publicShareQuery.isLoading) {
     return (
