@@ -19,36 +19,11 @@
 			}
 		},
 		{
-			"source": "/share/(.*)",
-			"destination": "/index.html"
-		},
-		{
-			"source": "/shared-with-me",
-			"destination": "/index.html"
-		},
-		{
-			"source": "/data-rooms/(.*)",
-			"destination": "/index.html"
-		},
-		{
-			"source": "/folders/(.*)",
-			"destination": "/index.html"
-		},
-		{
-			"source": "/files/(.*)",
-			"destination": "/index.html"
-		},
-		{
-			"source": "/login",
-			"destination": "/index.html"
-		},
-		{
-			"source": "/register",
-			"destination": "/index.html"
-		},
-		{
 			"source": "/(.*)",
-			"destination": "/index.html"
+			"destination": {
+				"type": "service",
+				"service": "frontend"
+			}
 		}
 	]
 }
