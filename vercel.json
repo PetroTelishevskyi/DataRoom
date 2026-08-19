@@ -4,14 +4,12 @@
 			"root": "frontend",
 			"framework": "vite"
 		},
-
 		"backend": {
 			"root": "backend",
 			"runtime": "node",
 			"entrypoint": "src/main.ts"
 		}
 	},
-
 	"rewrites": [
 		{
 			"source": "/api/(.*)",
@@ -20,10 +18,17 @@
 			}
 		},
 		{
+			"source": "/share/(.*)",
+			"destination": {
+				"service": "frontend",
+				"path": "/"
+			}
+		},
+		{
 			"source": "/(.*)",
 			"destination": {
 				"service": "frontend",
-				"path": "/index.html"
+				"path": "/"
 			}
 		}
 	]
