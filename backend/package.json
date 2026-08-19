@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "npx prisma generate && nest build",
+    "build": "npm exec --package=prisma@6.19.3 -- prisma generate && nest build",
     "start": "node dist/main.js",
-    "start:dev": "npx prisma generate && nest start --watch",
+    "start:dev": "npm exec --package=prisma@6.19.3 -- prisma generate && nest start --watch",
     "lint": "eslint .",
-    "prisma:generate": "npx prisma generate",
-    "prisma:validate": "npx prisma validate"
+    "prisma:generate": "npm exec --package=prisma@6.19.3 -- prisma generate",
+    "prisma:validate": "npm exec --package=prisma@6.19.3 -- prisma validate"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
