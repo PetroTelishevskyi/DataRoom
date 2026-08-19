@@ -12,7 +12,8 @@
     "build:frontend": "npm run build -w frontend",
     "build:backend": "npm run build -w backend",
     "lint:frontend": "npm run lint -w frontend",
-    "lint:backend": "npm run lint -w backend"
+    "lint:backend": "npm run lint -w backend",
+    "postinstall": "npm run prisma:generate -w backend"
   },
   "engines": {
     "node": ">=22"
