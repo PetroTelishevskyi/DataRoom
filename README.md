@@ -4,8 +4,8 @@ Data Room is a secure document workspace for uploading PDF files, organizing the
 
 ## Hosted URLs
 
-- Frontend: https://data-room-git-main-petrotelishevskyis-projects.vercel.app
-- Backend API: https://data-room-git-main-petrotelishevskyis-projects.vercel.app/api/v1
+- Frontend: https://data-room-lyart.vercel.app
+- Backend API: https://data-room-lyart.vercel.app/api/v1
 
 The current deployment uses Vercel with the backend mounted under the same origin at `/api/v1`.
 
